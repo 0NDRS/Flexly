@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class HistoryCard extends StatelessWidget {
   final String date;
@@ -55,10 +56,9 @@ class HistoryCard extends StatelessWidget {
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
               image: const DecorationImage(
-                image: NetworkImage(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png'), // Placeholder
+                image: NetworkImage(MockData.placeholderImage),
                 fit: BoxFit.cover,
-                opacity: 0.1, // Make it subtle like the checkerboard
+                opacity: 0.1,
               ),
             ),
           ),

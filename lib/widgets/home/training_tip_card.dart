@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class TrainingTipCard extends StatelessWidget {
   const TrainingTipCard({super.key});
@@ -51,13 +52,13 @@ class TrainingTipCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Correct your posture for better results',
+                  MockData.trainingTipTitle,
                   style:
                       AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Learn how to improve...',
+                  MockData.trainingTipSubtitle,
                   style:
                       AppTextStyles.small.copyWith(color: AppColors.grayLight),
                 ),

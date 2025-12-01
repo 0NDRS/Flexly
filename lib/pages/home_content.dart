@@ -5,6 +5,7 @@ import 'package:flexly/widgets/home/analysis_card.dart';
 import 'package:flexly/widgets/home/statistics_graph.dart';
 import 'package:flexly/widgets/home/training_tip_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class HomeContent extends StatelessWidget {
   final Function(int) onTabChange;
@@ -18,17 +19,10 @@ class HomeContent extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AnalysisDetailPage(
+        builder: (context) => AnalysisDetailPage(
           date: '30.10.2025',
           overallRating: 7.8,
-          bodyPartRatings: {
-            'Arms': 8.2,
-            'Chest': 7.3,
-            'Abs': 6.8,
-            'Shoulders': 6.4,
-            'Legs': 8.1,
-            'Back': 7.4,
-          },
+          bodyPartRatings: MockData.bodyPartRatings,
         ),
       ),
     );

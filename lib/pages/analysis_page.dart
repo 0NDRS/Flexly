@@ -5,6 +5,7 @@ import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/widgets/analysis/analysis_stats_row.dart';
 import 'package:flexly/widgets/analysis/history_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class AnalysisPage extends StatelessWidget {
   const AnalysisPage({super.key});
@@ -66,56 +67,28 @@ class AnalysisPage extends StatelessWidget {
                 style: AppTextStyles.h2,
               ),
               const SizedBox(height: 16),
-              HistoryCard(
-                date: '30.10.2025',
-                overallRating: 7.8,
-                bodyPartRatings: const {
-                  'Arms': 8.2,
-                  'Chest': 7.3,
-                  'Abs': 6.8,
-                  'Shoulders': 6.4,
-                  'Legs': 8.1,
-                  'Back': 7.4,
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final dates = ['30.10.2025', '29.10.2025', '28.10.2025'];
+                  final ratings = [7.8, 8.1, 7.5];
+
+                  return HistoryCard(
+                    date: dates[index],
+                    overallRating: ratings[index],
+                    bodyPartRatings: MockData.bodyPartRatings,
+                    onDetailsTap: () => _navigateToDetails(
+                      context,
+                      dates[index],
+                      ratings[index],
+                      MockData.bodyPartRatings,
+                    ),
+                  );
                 },
-                onDetailsTap: () => _navigateToDetails(
-                  context,
-                  '30.10.2025',
-                  7.8,
-                  const {
-                    'Arms': 8.2,
-                    'Chest': 7.3,
-                    'Abs': 6.8,
-                    'Shoulders': 6.4,
-                    'Legs': 8.1,
-                    'Back': 7.4,
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              HistoryCard(
-                date: '29.10.2025',
-                overallRating: 7.8,
-                bodyPartRatings: const {
-                  'Arms': 8.2,
-                  'Chest': 7.3,
-                  'Abs': 6.8,
-                  'Shoulders': 6.4,
-                  'Legs': 8.1,
-                  'Back': 7.4,
-                },
-                onDetailsTap: () => _navigateToDetails(
-                  context,
-                  '29.10.2025',
-                  7.8,
-                  const {
-                    'Arms': 8.2,
-                    'Chest': 7.3,
-                    'Abs': 6.8,
-                    'Shoulders': 6.4,
-                    'Legs': 8.1,
-                    'Back': 7.4,
-                  },
-                ),
               ),
               const SizedBox(height: 48),
             ],

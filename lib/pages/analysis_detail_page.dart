@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class AnalysisDetailPage extends StatelessWidget {
   final String date;
@@ -14,9 +15,8 @@ class AnalysisDetailPage extends StatelessWidget {
     required this.date,
     required this.overallRating,
     required this.bodyPartRatings,
-    this.adviceTitle = '{{Title}}',
-    this.adviceDescription =
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco',
+    this.adviceTitle = MockData.adviceTitle,
+    this.adviceDescription = MockData.adviceDescription,
   });
 
   @override
@@ -58,8 +58,7 @@ class AnalysisDetailPage extends StatelessWidget {
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(16),
                     image: const DecorationImage(
-                      image: NetworkImage(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png'),
+                      image: NetworkImage(MockData.placeholderImage),
                       fit: BoxFit.cover,
                       opacity: 0.1,
                     ),

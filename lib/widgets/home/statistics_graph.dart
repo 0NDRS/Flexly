@@ -5,6 +5,16 @@ import 'package:flexly/theme/app_text_styles.dart';
 class StatisticsGraph extends StatelessWidget {
   const StatisticsGraph({super.key});
 
+  static const List<Map<String, dynamic>> _weeklyData = [
+    {'day': 'Mon', 'value': 5.0, 'selected': false},
+    {'day': 'Tue', 'value': 6.7, 'selected': true},
+    {'day': 'Wed', 'value': 0.0, 'selected': false},
+    {'day': 'Thu', 'value': 0.0, 'selected': false},
+    {'day': 'Fri', 'value': 0.0, 'selected': false},
+    {'day': 'Sat', 'value': 0.0, 'selected': false},
+    {'day': 'Sun', 'value': 0.0, 'selected': false},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,15 +50,13 @@ class StatisticsGraph extends StatelessWidget {
                   right: 0,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _buildBar('Mon', 5, false),
-                      _buildBar('Tue', 6.7, true),
-                      _buildBar('Wed', 0, false),
-                      _buildBar('Thu', 0, false),
-                      _buildBar('Fri', 0, false),
-                      _buildBar('Sat', 0, false),
-                      _buildBar('Sun', 0, false),
-                    ],
+                    children: _weeklyData
+                        .map((data) => _buildBar(
+                              data['day'] as String,
+                              data['value'] as double,
+                              data['selected'] as bool,
+                            ))
+                        .toList(),
                   ),
                 ),
               ],
@@ -57,17 +65,11 @@ class StatisticsGraph extends StatelessWidget {
           const SizedBox(height: 8),
           // X-Axis Labels
           Padding(
-            padding: const EdgeInsets.only(left: 16), // Reduced from 24
+            padding: const EdgeInsets.only(left: 16),
             child: Row(
-              children: [
-                _buildXLabel('Mon'),
-                _buildXLabel('Tue'),
-                _buildXLabel('Wed'),
-                _buildXLabel('Thu'),
-                _buildXLabel('Fri'),
-                _buildXLabel('Sat'),
-                _buildXLabel('Sun'),
-              ],
+              children: _weeklyData
+                  .map((data) => _buildXLabel(data['day'] as String))
+                  .toList(),
             ),
           ),
         ],
@@ -118,7 +120,7 @@ class StatisticsGraph extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B0000), // Darker red for tooltip bg
+                color: AppColors.tooltipBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -137,9 +139,7 @@ class StatisticsGraph extends StatelessWidget {
             width: 24,
             height: barHeight,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary
-                  : const Color(0xFF7A3E3E), // Less vibrant, darker red
+              color: isSelected ? AppColors.primary : AppColors.barInactive,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(8)),
             ),
@@ -172,7 +172,7 @@ class DashedLinePainter extends CustomPainter {
 class TrianglePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0xFF8B0000);
+    final paint = Paint()..color = AppColors.tooltipBackground;
     final path = Path();
     path.moveTo(0, 0);
     path.lineTo(size.width / 2, size.height);

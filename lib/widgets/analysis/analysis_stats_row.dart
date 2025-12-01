@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
+import 'package:flexly/data/mock_data.dart';
 
 class AnalysisStatsRow extends StatelessWidget {
   const AnalysisStatsRow({super.key});
@@ -12,18 +13,18 @@ class AnalysisStatsRow extends StatelessWidget {
         Expanded(
           child: _buildStatCard(
             icon: Icons.local_fire_department_rounded,
-            iconColor: const Color(0xFFFF5722), // Orange/Red
+            iconColor: AppColors.fireOrange,
             label: 'Streak',
-            value: '10 days',
+            value: MockData.streak,
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildStatCard(
             icon: Icons.fitness_center_rounded,
-            iconColor: const Color(0xFF448AFF), // Blue
+            iconColor: AppColors.waterBlue,
             label: 'Tracked',
-            value: '84',
+            value: MockData.trackedWorkouts,
           ),
         ),
       ],
