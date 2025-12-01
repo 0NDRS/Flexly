@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/widgets/app_bottom_navigation_bar.dart';
-import 'package:flexly/widgets/home/home_header.dart';
-import 'package:flexly/widgets/section_header.dart';
-import 'package:flexly/widgets/home/analysis_card.dart';
-import 'package:flexly/widgets/home/statistics_graph.dart';
-import 'package:flexly/widgets/home/training_tip_card.dart';
+import 'package:flexly/pages/home_content.dart';
+import 'package:flexly/pages/training_page.dart';
+import 'package:flexly/pages/analysis_page.dart';
+import 'package:flexly/pages/statistics_page.dart';
+import 'package:flexly/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,52 +16,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
+  void _onTabChange(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      HomeContent(onTabChange: _onTabChange),
+      const TrainingPage(),
+      const AnalysisPage(),
+      const StatisticsPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
-      body: const SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 16),
-                HomeHeader(),
-                SizedBox(height: 32),
-                SectionHeader(
-                  title: 'Analysis',
-                  actionText: 'View All',
-                ),
-                SizedBox(height: 16),
-                AnalysisCard(),
-                SizedBox(height: 32),
-                SectionHeader(
-                  title: 'Statistics',
-                  actionText: 'View All',
-                ),
-                SizedBox(height: 16),
-                StatisticsGraph(),
-                SizedBox(height: 32),
-                SectionHeader(
-                  title: 'Training Tips',
-                  actionText: 'View All',
-                ),
-                SizedBox(height: 16),
-                TrainingTipCard(),
-                SizedBox(height: 48),
-              ],
-            ),
-          ),
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
       ),
       bottomNavigationBar: AppBottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: _onTabChange,
       ),
     );
   }

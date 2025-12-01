@@ -7,7 +7,12 @@ import 'dart:convert';
 import 'dart:io';
 
 class AnalysisCard extends StatefulWidget {
-  const AnalysisCard({super.key});
+  final VoidCallback? onDetailsTap;
+
+  const AnalysisCard({
+    super.key,
+    this.onDetailsTap,
+  });
 
   @override
   State<AnalysisCard> createState() => _AnalysisCardState();
@@ -77,20 +82,23 @@ class _AnalysisCardState extends State<AnalysisCard> {
                     children: [
                       Text(
                         'Latest Stats',
-                        style: AppTextStyles.body2
+                        style: AppTextStyles.caption2
                             .copyWith(color: AppColors.white),
                       ),
                       Text(
                         '30.10.2025',
                         style: AppTextStyles.small
-                            .copyWith(color: AppColors.grayLight),
+                            .copyWith(color: AppColors.white),
                       ),
                     ],
                   ),
-                  Text(
-                    'See Details',
-                    style: AppTextStyles.caption2
-                        .copyWith(color: AppColors.primary),
+                  GestureDetector(
+                    onTap: widget.onDetailsTap,
+                    child: Text(
+                      'See Details',
+                      style: AppTextStyles.caption2
+                          .copyWith(color: AppColors.primary),
+                    ),
                   ),
                 ],
               ),

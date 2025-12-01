@@ -23,11 +23,11 @@ class HomeHeader extends StatelessWidget {
           children: [
             Text(
               'Hi, {Name} 👋',
-              style: AppTextStyles.caption1,
+              style: AppTextStyles.caption1.copyWith(color: AppColors.white),
             ),
             Text(
               "Let's workout!",
-              style: AppTextStyles.small.copyWith(color: AppColors.grayLight),
+              style: AppTextStyles.small.copyWith(color: AppColors.white),
             ),
           ],
         ),
