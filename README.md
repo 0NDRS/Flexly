@@ -1,44 +1,64 @@
 # Flexly
 
-A new Flutter application.
+A comprehensive mobile application built with Flutter and a Node.js backend.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To run this project locally, you need to set up both the backend server and the Flutter mobile application.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install)
+- [Node.js](https://nodejs.org/) (v14 or higher)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 1. Backend Setup
 
-## Project Structure
+The backend is located in the `backend/` directory and is built with Node.js, Express, and MongoDB.
 
-```
-flexly/
-├── android/          # Android-specific code
-├── ios/              # iOS-specific code
-├── lib/              # Dart source files
-│   └── main.dart     # Application entry point
-├── test/             # Test files
-├── pubspec.yaml      # Project dependencies
-└── README.md         # This file
-```
+1.  Navigate to the backend directory:
+    ```bash
+    cd backend
+    ```
 
-## Running the App
+2.  Install the necessary dependencies:
+    ```bash
+    npm install
+    ```
 
-To run this Flutter app:
+3.  **Environment Configuration (.env)**:
+    The backend requires a `.env` file containing database connection strings (MongoDB URI) and JWT secrets.
+    > **Note:** For security reasons, the `.env` file is not included in the repository. **Please contact the development team to obtain the `.env` file for testing purposes.**
 
-1. Ensure you have Flutter installed: https://docs.flutter.dev/get-started/install
-2. Run `flutter pub get` to install dependencies
-3. Run `flutter run` to start the app on a connected device or simulator
+4.  Start the backend server:
+    ```bash
+    npm start
+    ```
+    The server will start running on `http://localhost:3000`.
+
+### 2. Mobile App Setup
+
+Once the backend is running, you can start the Flutter application.
+
+1.  Return to the project root directory:
+    ```bash
+    cd ..
+    ```
+
+2.  Install Flutter dependencies:
+    ```bash
+    flutter pub get
+    ```
+
+3.  Run the app on your preferred emulator or device:
+    ```bash
+    flutter run
+    ```
+
+    *Note: The app is configured to connect to `10.0.2.2:3000` for Android emulators and `localhost:3000` for iOS simulators.*
 
 ## Testing
 
-Run tests with:
+To run the Flutter tests:
 ```bash
 flutter test
 ```
