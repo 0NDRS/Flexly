@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flexly/pages/home.dart';
+import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
           labelSmall: AppTextStyles.caption2,
         ),
       ),
-      home: const HomePage(),
+      home: const LoginPage(),
     );
   }
 }

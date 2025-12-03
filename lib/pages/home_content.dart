@@ -19,7 +19,7 @@ class HomeContent extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AnalysisDetailPage(
+        builder: (context) => const AnalysisDetailPage(
           date: '30.10.2025',
           overallRating: 7.8,
           bodyPartRatings: MockData.bodyPartRatings,
