@@ -2,90 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/widgets/primary_button.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
 
-class AnalysisCard extends StatefulWidget {
+class AnalysisCard extends StatelessWidget {
+  final double rating;
+  final String date;
+  final int streak;
+  final int tracked;
+  final String? imageUrl;
   final VoidCallback? onDetailsTap;
+  final VoidCallback? onUploadTap;
 
   const AnalysisCard({
     super.key,
+    required this.rating,
+    required this.date,
+    this.streak = 0,
+    this.tracked = 0,
+    this.imageUrl,
     this.onDetailsTap,
+    this.onUploadTap,
   });
 
   @override
-  State<AnalysisCard> createState() => _AnalysisCardState();
-}
-
-class _AnalysisCardState extends State<AnalysisCard> {
-  Future<Map<String, dynamic>>? _analysisData;
-
-  @override
-  void initState() {
-    super.initState();
-    _analysisData = _fetchAnalysisData();
-  }
-
-  Future<Map<String, dynamic>> _fetchAnalysisData() async {
-    final String baseUrl =
-        Platform.isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/api/analysis'));
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Failed to load analysis data');
-      }
-    } catch (e) {
-      // Fallback data for UI demonstration
-      return {
-        'rating': 7.8,
-        'streak': 10,
-        'analyticsTracked': 84,
-      };
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _analysisData,
-      builder: (context, snapshot) {
-        final data = snapshot.data ??
-            {
-              'rating': 7.8,
-              'streak': 10,
-              'analyticsTracked': 84,
-            };
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.grayDark,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.gray, width: 1),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.grayDark,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.gray, width: 1),
+      ),
+      child: Column(
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 20),
+          _buildRatingSection(),
+          const SizedBox(height: 24),
+          _buildStatsRow(),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: PrimaryButton(
+              text: 'Upload New',
+              onPressed: onUploadTap ?? () {},
+            ),
           ),
-          child: Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildRatingSection(data['rating']),
-              const SizedBox(height: 24),
-              _buildStatsRow(data['streak'], data['analyticsTracked']),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: PrimaryButton(
-                  text: 'Upload New',
-                  onPressed: () {},
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -102,13 +65,13 @@ class _AnalysisCardState extends State<AnalysisCard> {
               style: AppTextStyles.caption2.copyWith(color: AppColors.white),
             ),
             Text(
-              '30.10.2025',
+              date,
               style: AppTextStyles.small.copyWith(color: AppColors.white),
             ),
           ],
         ),
         GestureDetector(
-          onTap: widget.onDetailsTap,
+          onTap: onDetailsTap,
           child: Text(
             'See Details',
             style: AppTextStyles.caption2.copyWith(color: AppColors.primary),
@@ -118,7 +81,7 @@ class _AnalysisCardState extends State<AnalysisCard> {
     );
   }
 
-  Widget _buildRatingSection(dynamic rating) {
+  Widget _buildRatingSection() {
     return Column(
       children: [
         Container(
@@ -127,14 +90,27 @@ class _AnalysisCardState extends State<AnalysisCard> {
           decoration: BoxDecoration(
             color: AppColors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
+            image: imageUrl != null
+                ? DecorationImage(
+                    image: NetworkImage(imageUrl!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
           ),
+          // Placeholder for a chart or image
+          child: imageUrl == null
+              ? const Center(
+                  child:
+                      Icon(Icons.bar_chart, size: 48, color: AppColors.primary),
+                )
+              : null,
         ),
         const SizedBox(height: 12),
         RichText(
           text: TextSpan(
             children: [
               TextSpan(
-                text: '$rating',
+                text: rating.toStringAsFixed(1),
                 style: AppTextStyles.h2,
               ),
               TextSpan(
@@ -148,7 +124,7 @@ class _AnalysisCardState extends State<AnalysisCard> {
     );
   }
 
-  Widget _buildStatsRow(dynamic streak, dynamic tracked) {
+  Widget _buildStatsRow() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

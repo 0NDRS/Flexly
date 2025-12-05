@@ -45,7 +45,7 @@ class HomeHeader extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Transform.rotate(
-                angle: -0.2, // Slightly rotated to left
+                angle: 0,
                 child: const Icon(
                   Icons.notifications_outlined,
                   color: AppColors.white,

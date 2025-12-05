@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/widgets/section_header.dart';
 import 'package:flexly/widgets/home/analysis_card.dart';
 import 'package:flexly/widgets/home/statistics_graph.dart';
 import 'package:flexly/widgets/home/training_tip_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
-import 'package:flexly/data/mock_data.dart';
+import 'package:flexly/pages/analysis_loading_page.dart';
+import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/theme/app_colors.dart';
+import 'package:flexly/theme/app_text_styles.dart';
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   final Function(int) onTabChange;
 
   const HomeContent({
@@ -15,58 +19,179 @@ class HomeContent extends StatelessWidget {
     required this.onTabChange,
   });
 
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  Map<String, dynamic>? _latestAnalysis;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLatestAnalysis();
+  }
+
+  Future<void> _fetchLatestAnalysis() async {
+    try {
+      final service = AnalysisService();
+      final analyses = await service.getAnalyses();
+      if (mounted) {
+        setState(() {
+          if (analyses.isNotEmpty) {
+            _latestAnalysis = analyses.first;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Silently fail or show a small error indicator if needed
+        debugPrint('Error fetching latest analysis: $e');
+      }
+    }
+  }
+
   void _navigateToDetails(BuildContext context) {
+    if (_latestAnalysis == null) return;
+
+    final analysis = _latestAnalysis!;
+    final dateStr = analysis['createdAt'];
+    final date = DateTime.parse(dateStr);
+    final formattedDate = DateFormat('dd.MM.yyyy').format(date);
+
+    final ratings = analysis['ratings'];
+    final overall = (ratings['overall'] as num).toDouble();
+
+    final Map<String, double> bodyPartRatings = {
+      'Arms': (ratings['arms'] as num).toDouble(),
+      'Chest': (ratings['chest'] as num).toDouble(),
+      'Abs': (ratings['abs'] as num).toDouble(),
+      'Shoulders': (ratings['shoulders'] as num).toDouble(),
+      'Legs': (ratings['legs'] as num).toDouble(),
+      'Back': (ratings['back'] as num).toDouble(),
+    };
+
+    String? imageUrl;
+    if (analysis['imageUrls'] != null &&
+        (analysis['imageUrls'] as List).isNotEmpty) {
+      imageUrl = analysis['imageUrls'][0];
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AnalysisDetailPage(
-          date: '30.10.2025',
-          overallRating: 7.8,
-          bodyPartRatings: MockData.bodyPartRatings,
+        builder: (context) => AnalysisDetailPage(
+          date: formattedDate,
+          overallRating: overall,
+          bodyPartRatings: bodyPartRatings,
+          adviceDescription: analysis['advice'] ?? '',
+          imageUrl: imageUrl,
         ),
       ),
     );
   }
 
+  void _handleUpload(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AnalysisLoadingPage()),
+    );
+    _fetchLatestAnalysis();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const HomeHeader(),
-              const SizedBox(height: 32),
-              SectionHeader(
-                title: 'Analysis',
-                actionText: 'View All',
-                onActionTap: () => onTabChange(2),
-              ),
-              const SizedBox(height: 16),
-              AnalysisCard(
-                onDetailsTap: () => _navigateToDetails(context),
-              ),
-              const SizedBox(height: 32),
-              SectionHeader(
-                title: 'Statistics',
-                actionText: 'View All',
-                onActionTap: () => onTabChange(3),
-              ),
-              const SizedBox(height: 16),
-              const StatisticsGraph(),
-              const SizedBox(height: 32),
-              SectionHeader(
-                title: 'Training Tips',
-                actionText: 'View All',
-                onActionTap: () => onTabChange(1),
-              ),
-              const SizedBox(height: 16),
-              const TrainingTipCard(),
-              const SizedBox(height: 48),
-            ],
+      child: RefreshIndicator(
+        onRefresh: _fetchLatestAnalysis,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const HomeHeader(),
+                const SizedBox(height: 32),
+                SectionHeader(
+                  title: 'Analysis',
+                  actionText: 'View All',
+                  onActionTap: () => widget.onTabChange(2),
+                ),
+                const SizedBox(height: 16),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (_latestAnalysis != null)
+                  AnalysisCard(
+                    rating: (_latestAnalysis!['ratings']['overall'] as num)
+                        .toDouble(),
+                    date: DateFormat('dd.MM.yyyy')
+                        .format(DateTime.parse(_latestAnalysis!['createdAt'])),
+                    streak: 0, // Placeholder
+                    tracked: 0, // Placeholder
+                    imageUrl: (_latestAnalysis!['imageUrls'] != null &&
+                            (_latestAnalysis!['imageUrls'] as List).isNotEmpty)
+                        ? _latestAnalysis!['imageUrls'][0]
+                        : null,
+                    onDetailsTap: () => _navigateToDetails(context),
+                    onUploadTap: () => _handleUpload(context),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.grayDark,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.gray),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            'No analysis yet',
+                            style: AppTextStyles.h3
+                                .copyWith(color: AppColors.white),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => _handleUpload(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Start First Analysis'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 32),
+                SectionHeader(
+                  title: 'Statistics',
+                  actionText: 'View All',
+                  onActionTap: () => widget.onTabChange(3),
+                ),
+                const SizedBox(height: 16),
+                const StatisticsGraph(),
+                const SizedBox(height: 32),
+                SectionHeader(
+                  title: 'Training Tips',
+                  actionText: 'View All',
+                  onActionTap: () => widget.onTabChange(1),
+                ),
+                const SizedBox(height: 16),
+                const TrainingTipCard(),
+                const SizedBox(height: 48),
+              ],
+            ),
           ),
         ),
       ),

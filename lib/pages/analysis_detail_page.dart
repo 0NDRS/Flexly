@@ -9,6 +9,7 @@ class AnalysisDetailPage extends StatelessWidget {
   final Map<String, double> bodyPartRatings;
   final String adviceTitle;
   final String adviceDescription;
+  final String? imageUrl;
 
   const AnalysisDetailPage({
     super.key,
@@ -17,6 +18,7 @@ class AnalysisDetailPage extends StatelessWidget {
     required this.bodyPartRatings,
     this.adviceTitle = MockData.adviceTitle,
     this.adviceDescription = MockData.adviceDescription,
+    this.imageUrl,
   });
 
   @override
@@ -57,10 +59,11 @@ class AnalysisDetailPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(16),
-                    image: const DecorationImage(
-                      image: NetworkImage(MockData.placeholderImage),
+                    image: DecorationImage(
+                      image:
+                          NetworkImage(imageUrl ?? MockData.placeholderImage),
                       fit: BoxFit.cover,
-                      opacity: 0.1,
+                      opacity: imageUrl != null ? 1.0 : 0.1,
                     ),
                   ),
                 ),
