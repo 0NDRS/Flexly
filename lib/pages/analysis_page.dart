@@ -63,7 +63,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
     double overallRating,
     Map<String, double> bodyPartRatings,
     String advice,
-    String? imageUrl,
+    List<String> imageUrls,
+    String adviceTitle,
   ) {
     Navigator.push(
       context,
@@ -73,7 +74,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
           overallRating: overallRating,
           bodyPartRatings: bodyPartRatings,
           adviceDescription: advice,
-          imageUrl: imageUrl,
+          imageUrls: imageUrls,
+          adviceTitle: adviceTitle,
         ),
       ),
     );
@@ -114,7 +116,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const AnalysisStatsRow(),
+                AnalysisStatsRow(
+                  streak: AnalysisService.calculateStreak(_analyses),
+                  tracked: _analyses.length,
+                ),
                 const SizedBox(height: 32),
                 Text(
                   'History',
@@ -157,20 +162,30 @@ class _AnalysisPageState extends State<AnalysisPage> {
                         'Back': (ratings['back'] as num).toDouble(),
                       };
 
+                      final String? imageUrl = (analysis['imageUrls'] != null &&
+                              (analysis['imageUrls'] as List).isNotEmpty)
+                          ? analysis['imageUrls'][0]
+                          : null;
+
+                      final List<String> imageUrls =
+                          (analysis['imageUrls'] as List<dynamic>?)
+                                  ?.map((e) => e.toString())
+                                  .toList() ??
+                              [];
+
                       return HistoryCard(
                         date: formattedDate,
                         overallRating: overall,
                         bodyPartRatings: bodyPartRatings,
+                        imageUrl: imageUrl,
                         onDetailsTap: () => _navigateToDetails(
                           context,
                           formattedDate,
                           overall,
                           bodyPartRatings,
                           analysis['advice'] ?? '',
-                          (analysis['imageUrls'] != null &&
-                                  (analysis['imageUrls'] as List).isNotEmpty)
-                              ? analysis['imageUrls'][0]
-                              : null,
+                          imageUrls,
+                          analysis['adviceTitle'] ?? 'Analysis Result',
                         ),
                       );
                     },

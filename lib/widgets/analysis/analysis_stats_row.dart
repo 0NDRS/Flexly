@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/data/mock_data.dart';
 
 class AnalysisStatsRow extends StatelessWidget {
-  const AnalysisStatsRow({super.key});
+  final int streak;
+  final int tracked;
+
+  const AnalysisStatsRow({
+    super.key,
+    this.streak = 0,
+    this.tracked = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +21,7 @@ class AnalysisStatsRow extends StatelessWidget {
             icon: Icons.local_fire_department_rounded,
             iconColor: AppColors.fireOrange,
             label: 'Streak',
-            value: MockData.streak,
+            value: '$streak days',
           ),
         ),
         const SizedBox(width: 16),
@@ -24,7 +30,7 @@ class AnalysisStatsRow extends StatelessWidget {
             icon: Icons.fitness_center_rounded,
             iconColor: AppColors.waterBlue,
             label: 'Tracked',
-            value: MockData.trackedWorkouts,
+            value: '$tracked',
           ),
         ),
       ],

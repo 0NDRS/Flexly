@@ -24,6 +24,7 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
+  List<dynamic> _analyses = [];
   Map<String, dynamic>? _latestAnalysis;
   bool _isLoading = true;
 
@@ -39,6 +40,7 @@ class _HomeContentState extends State<HomeContent> {
       final analyses = await service.getAnalyses();
       if (mounted) {
         setState(() {
+          _analyses = analyses;
           if (analyses.isNotEmpty) {
             _latestAnalysis = analyses.first;
           }
@@ -76,10 +78,11 @@ class _HomeContentState extends State<HomeContent> {
       'Back': (ratings['back'] as num).toDouble(),
     };
 
-    String? imageUrl;
-    if (analysis['imageUrls'] != null &&
-        (analysis['imageUrls'] as List).isNotEmpty) {
-      imageUrl = analysis['imageUrls'][0];
+    List<String> imageUrls = [];
+    if (analysis['imageUrls'] != null) {
+      imageUrls = (analysis['imageUrls'] as List<dynamic>)
+          .map((e) => e.toString())
+          .toList();
     }
 
     Navigator.push(
@@ -90,7 +93,8 @@ class _HomeContentState extends State<HomeContent> {
           overallRating: overall,
           bodyPartRatings: bodyPartRatings,
           adviceDescription: analysis['advice'] ?? '',
-          imageUrl: imageUrl,
+          imageUrls: imageUrls,
+          adviceTitle: analysis['adviceTitle'] ?? 'Analysis Result',
         ),
       ),
     );
@@ -133,8 +137,8 @@ class _HomeContentState extends State<HomeContent> {
                         .toDouble(),
                     date: DateFormat('dd.MM.yyyy')
                         .format(DateTime.parse(_latestAnalysis!['createdAt'])),
-                    streak: 0, // Placeholder
-                    tracked: 0, // Placeholder
+                    streak: AnalysisService.calculateStreak(_analyses),
+                    tracked: _analyses.length,
                     imageUrl: (_latestAnalysis!['imageUrls'] != null &&
                             (_latestAnalysis!['imageUrls'] as List).isNotEmpty)
                         ? _latestAnalysis!['imageUrls'][0]

@@ -3,13 +3,13 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/data/mock_data.dart';
 
-class AnalysisDetailPage extends StatelessWidget {
+class AnalysisDetailPage extends StatefulWidget {
   final String date;
   final double overallRating;
   final Map<String, double> bodyPartRatings;
   final String adviceTitle;
   final String adviceDescription;
-  final String? imageUrl;
+  final List<String> imageUrls;
 
   const AnalysisDetailPage({
     super.key,
@@ -18,8 +18,15 @@ class AnalysisDetailPage extends StatelessWidget {
     required this.bodyPartRatings,
     this.adviceTitle = MockData.adviceTitle,
     this.adviceDescription = MockData.adviceDescription,
-    this.imageUrl,
+    this.imageUrls = const [],
   });
+
+  @override
+  State<AnalysisDetailPage> createState() => _AnalysisDetailPageState();
+}
+
+class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
+  int _currentImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +49,7 @@ class AnalysisDetailPage extends StatelessWidget {
                       onTap: () => Navigator.pop(context),
                     ),
                     Text(
-                      date,
+                      widget.date,
                       style: AppTextStyles.h2.copyWith(color: AppColors.white),
                     ),
                     _buildCircleButton(
@@ -52,20 +59,69 @@ class AnalysisDetailPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Image
+                // Image Carousel
                 Container(
                   height: 300,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: AppColors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image:
-                          NetworkImage(imageUrl ?? MockData.placeholderImage),
-                      fit: BoxFit.cover,
-                      opacity: imageUrl != null ? 1.0 : 0.1,
-                    ),
                   ),
+                  child: widget.imageUrls.isEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            MockData.placeholderImage,
+                            fit: BoxFit.cover,
+                            opacity: const AlwaysStoppedAnimation(0.1),
+                          ),
+                        )
+                      : Stack(
+                          children: [
+                            PageView.builder(
+                              itemCount: widget.imageUrls.length,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentImageIndex = index;
+                                });
+                              },
+                              itemBuilder: (context, index) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    widget.imageUrls[index],
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              },
+                            ),
+                            if (widget.imageUrls.length > 1)
+                              Positioned(
+                                bottom: 16,
+                                left: 0,
+                                right: 0,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    widget.imageUrls.length,
+                                    (index) => Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 4),
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: _currentImageIndex == index
+                                            ? AppColors.primary
+                                            : AppColors.white
+                                                .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                 ),
                 const SizedBox(height: 24),
                 // Analysis Header
@@ -80,7 +136,7 @@ class AnalysisDetailPage extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: overallRating.toString(),
+                            text: widget.overallRating.toString(),
                             style: AppTextStyles.h1.copyWith(fontSize: 40),
                           ),
                           TextSpan(
@@ -107,11 +163,14 @@ class AnalysisDetailPage extends StatelessWidget {
                       Expanded(
                         child: Column(
                           children: [
-                            _buildStatRow('Arms', bodyPartRatings['Arms'] ?? 0),
+                            _buildStatRow(
+                                'Arms', widget.bodyPartRatings['Arms'] ?? 0),
                             const SizedBox(height: 24),
-                            _buildStatRow('Abs', bodyPartRatings['Abs'] ?? 0),
+                            _buildStatRow(
+                                'Abs', widget.bodyPartRatings['Abs'] ?? 0),
                             const SizedBox(height: 24),
-                            _buildStatRow('Legs', bodyPartRatings['Legs'] ?? 0),
+                            _buildStatRow(
+                                'Legs', widget.bodyPartRatings['Legs'] ?? 0),
                           ],
                         ),
                       ),
@@ -126,12 +185,13 @@ class AnalysisDetailPage extends StatelessWidget {
                         child: Column(
                           children: [
                             _buildStatRow(
-                                'Chest', bodyPartRatings['Chest'] ?? 0),
+                                'Chest', widget.bodyPartRatings['Chest'] ?? 0),
+                            const SizedBox(height: 24),
+                            _buildStatRow('Shoulders',
+                                widget.bodyPartRatings['Shoulders'] ?? 0),
                             const SizedBox(height: 24),
                             _buildStatRow(
-                                'Shoulders', bodyPartRatings['Shoulders'] ?? 0),
-                            const SizedBox(height: 24),
-                            _buildStatRow('Back', bodyPartRatings['Back'] ?? 0),
+                                'Back', widget.bodyPartRatings['Back'] ?? 0),
                           ],
                         ),
                       ),
@@ -156,12 +216,12 @@ class AnalysisDetailPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        adviceTitle,
+                        widget.adviceTitle,
                         style: AppTextStyles.h3,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        adviceDescription,
+                        widget.adviceDescription,
                         style: AppTextStyles.body1
                             .copyWith(color: AppColors.white),
                       ),
@@ -199,6 +259,7 @@ class AnalysisDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatRow(String label, double value) {
+    final isVisible = value > 0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -210,17 +271,18 @@ class AnalysisDetailPage extends StatelessWidget {
           text: TextSpan(
             children: [
               TextSpan(
-                text: value.toString(),
+                text: isVisible ? value.toString() : '-',
                 style: AppTextStyles.body2.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextSpan(
-                text: '/10',
-                style:
-                    AppTextStyles.caption1.copyWith(color: AppColors.grayLight),
-              ),
+              if (isVisible)
+                TextSpan(
+                  text: '/10',
+                  style: AppTextStyles.caption1
+                      .copyWith(color: AppColors.grayLight),
+                ),
             ],
           ),
         ),

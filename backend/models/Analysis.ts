@@ -25,6 +25,10 @@ const analysisSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  adviceTitle: {
+    type: String,
+    required: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

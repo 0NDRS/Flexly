@@ -103,6 +103,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
 
     final ratings = _result!['ratings'];
     final advice = _result!['advice'];
+    final adviceTitle = _result!['adviceTitle'] ?? 'AI Analysis Advice';
     final dateStr = _result!['createdAt'];
     final date = DateTime.parse(dateStr);
     final formattedDate = DateFormat('dd.MM.yyyy').format(date);
@@ -116,6 +117,13 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
       'Back': (ratings['back'] as num).toDouble(),
     };
 
+    List<String> imageUrls = [];
+    if (_result!['imageUrls'] != null) {
+      imageUrls = (_result!['imageUrls'] as List<dynamic>)
+          .map((e) => e.toString())
+          .toList();
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -123,8 +131,9 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
           date: formattedDate,
           overallRating: (ratings['overall'] as num).toDouble(),
           bodyPartRatings: bodyPartRatings,
-          adviceTitle: 'AI Analysis Advice',
+          adviceTitle: adviceTitle,
           adviceDescription: advice,
+          imageUrls: imageUrls,
         ),
       ),
     );

@@ -8,6 +8,7 @@ class HistoryCard extends StatelessWidget {
   final double overallRating;
   final Map<String, double> bodyPartRatings;
   final VoidCallback? onDetailsTap;
+  final String? imageUrl;
 
   const HistoryCard({
     super.key,
@@ -15,6 +16,7 @@ class HistoryCard extends StatelessWidget {
     required this.overallRating,
     required this.bodyPartRatings,
     this.onDetailsTap,
+    this.imageUrl,
   });
 
   @override
@@ -55,10 +57,10 @@ class HistoryCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
-              image: const DecorationImage(
-                image: NetworkImage(MockData.placeholderImage),
+              image: DecorationImage(
+                image: NetworkImage(imageUrl ?? MockData.placeholderImage),
                 fit: BoxFit.cover,
-                opacity: 0.1,
+                opacity: imageUrl != null ? 1.0 : 0.1,
               ),
             ),
           ),
@@ -126,6 +128,7 @@ class HistoryCard extends StatelessWidget {
   }
 
   Widget _buildStatRow(String label, double value) {
+    final isVisible = value > 0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -137,17 +140,18 @@ class HistoryCard extends StatelessWidget {
           text: TextSpan(
             children: [
               TextSpan(
-                text: value.toString(),
+                text: isVisible ? value.toString() : '-',
                 style: AppTextStyles.body2.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextSpan(
-                text: '/10',
-                style:
-                    AppTextStyles.caption1.copyWith(color: AppColors.grayLight),
-              ),
+              if (isVisible)
+                TextSpan(
+                  text: '/10',
+                  style: AppTextStyles.caption1
+                      .copyWith(color: AppColors.grayLight),
+                ),
             ],
           ),
         ),

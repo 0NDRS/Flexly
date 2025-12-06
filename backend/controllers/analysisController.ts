@@ -78,7 +78,8 @@ export const analyzePhysique = async (req: Request, res: Response) => {
          - Be strict but fair. A 10 is professional Olympia level. Average fit person might be 5-7.
 
       2. **Advice**:
-         - Provide a detailed, actionable analysis (2-4 sentences).
+         - **Title**: Provide a short, punchy title for the advice (max 5-7 words). E.g., "Focus on Upper Chest" or "Great Symmetry, Lagging Legs".
+         - **Description**: Provide a detailed, actionable analysis (2-4 sentences).
          - Explicitly mention which parts are strong and which lag behind.
          - If you rated any part as 0 (not visible), briefly mention that you couldn't see it.
          - Give specific exercise recommendations for the lagging parts.
@@ -93,6 +94,7 @@ export const analyzePhysique = async (req: Request, res: Response) => {
           "legs": 0,
           "back": 7.8
         },
+        "adviceTitle": "Focus on Upper Chest",
         "advice": "Your shoulders have great width, but your upper chest lacks fullness; prioritize incline movements. I couldn't see your legs, so I couldn't rate them."
       }
       Do not include markdown formatting like \`\`\`json.
@@ -120,12 +122,18 @@ export const analyzePhysique = async (req: Request, res: Response) => {
 
     // Calculate Overall
     const ratings: Record<string, number> = aiData.ratings
-    const overall = parseFloat(
-      (
-        Object.values(ratings).reduce((a, b) => a + b, 0) /
-        Object.values(ratings).length
-      ).toFixed(1)
-    )
+
+    // Filter out 0 ratings (not visible) for the average calculation
+    const validRatings = Object.values(ratings).filter((r) => r > 0)
+
+    const overall =
+      validRatings.length > 0
+        ? parseFloat(
+            (
+              validRatings.reduce((a, b) => a + b, 0) / validRatings.length
+            ).toFixed(1)
+          )
+        : 0 // Fallback if nothing is visible
 
     // 5. Save to Database
     // Use the authenticated user from the token
@@ -140,6 +148,7 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       imageUrls, // Now these are Cloudinary URLs
       ratings: { ...ratings, overall },
       advice: aiData.advice,
+      adviceTitle: aiData.adviceTitle || 'Analysis Result', // Fallback
     })
 
     res.status(201).json(analysis)

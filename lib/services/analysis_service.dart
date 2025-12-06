@@ -73,4 +73,40 @@ class AnalysisService {
       throw Exception('Error fetching analyses: $e');
     }
   }
+
+  static int calculateStreak(List<dynamic> analyses) {
+    if (analyses.isEmpty) return 0;
+
+    final dates = analyses
+        .map((a) => DateTime.parse(a['createdAt']))
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (dates.isEmpty) return 0;
+
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+    final normalizedYesterday =
+        normalizedToday.subtract(const Duration(days: 1));
+
+    if (dates.first != normalizedToday && dates.first != normalizedYesterday) {
+      return 0;
+    }
+
+    int streak = 0;
+    DateTime expectedDate = dates.first;
+
+    for (var date in dates) {
+      if (date == expectedDate) {
+        streak++;
+        expectedDate = expectedDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
 }
