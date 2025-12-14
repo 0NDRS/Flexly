@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/pages/home.dart';
+import 'package:flexly/pages/body_info_page.dart';
+import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/services/auth_service.dart';
 
 // Test register page for testing backend authentication
@@ -60,7 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (result['success']) {
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const BodyInfoPage()),
         );
       }
     } else {
@@ -81,183 +82,246 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 48),
-                Center(
-                  child: Text(
-                    'Create Account',
-                    style: AppTextStyles.h1.copyWith(
-                      fontSize: 32,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: Text(
-                    'Join Flexly today',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.grayLight,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                Text(
-                  'Full Name',
-                  style:
-                      AppTextStyles.body2.copyWith(color: AppColors.grayLight),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _nameController,
-                  style: AppTextStyles.body1,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your full name',
-                    hintStyle:
-                        AppTextStyles.body1.copyWith(color: AppColors.gray),
-                    filled: true,
-                    fillColor: AppColors.grayDark,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Email',
-                  style:
-                      AppTextStyles.body2.copyWith(color: AppColors.grayLight),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _emailController,
-                  style: AppTextStyles.body1,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your email',
-                    hintStyle:
-                        AppTextStyles.body1.copyWith(color: AppColors.gray),
-                    filled: true,
-                    fillColor: AppColors.grayDark,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Password',
-                  style:
-                      AppTextStyles.body2.copyWith(color: AppColors.grayLight),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: AppTextStyles.body1,
-                  decoration: InputDecoration(
-                    hintText: 'Create a password',
-                    hintStyle:
-                        AppTextStyles.body1.copyWith(color: AppColors.gray),
-                    filled: true,
-                    fillColor: AppColors.grayDark,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Confirm Password',
-                  style:
-                      AppTextStyles.body2.copyWith(color: AppColors.grayLight),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  style: AppTextStyles.body1,
-                  decoration: InputDecoration(
-                    hintText: 'Confirm your password',
-                    hintStyle:
-                        AppTextStyles.body1.copyWith(color: AppColors.gray),
-                    filled: true,
-                    fillColor: AppColors.grayDark,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                SizedBox(
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleRegister,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: AppColors.white)
-                        : Text(
-                            'Register',
-                            style: AppTextStyles.h3
-                                .copyWith(color: AppColors.white),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header with logo and text
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(34),
+                              child: Image.asset(
+                                'assets/icon/app_icon.png',
+                                width: 100,
+                                height: 100,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Your body\nkeeps score',
+                                  style: AppTextStyles.h1.copyWith(
+                                    fontSize: 28,
+                                    color: AppColors.white,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 3,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Make it count.',
+                                  style: AppTextStyles.h1.copyWith(
+                                    fontSize: 28,
+                                    color: AppColors.white,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Powered by Flex Intelligence™',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.grayLight,
+                            fontSize: 12,
                           ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Already have an account? ",
-                      style: AppTextStyles.body2
-                          .copyWith(color: AppColors.grayLight),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
+                  ),
+                  const SizedBox(height: 48),
+                  // Username Input
+                  TextField(
+                    controller: _nameController,
+                    style: AppTextStyles.body1.copyWith(color: AppColors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Username',
+                      hintStyle:
+                          AppTextStyles.body1.copyWith(color: AppColors.gray),
+                      filled: true,
+                      fillColor: AppColors.grayDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Email Input
+                  TextField(
+                    controller: _emailController,
+                    style: AppTextStyles.body1.copyWith(color: AppColors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Email',
+                      hintStyle:
+                          AppTextStyles.body1.copyWith(color: AppColors.gray),
+                      filled: true,
+                      fillColor: AppColors.grayDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Password Input
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: AppTextStyles.body1.copyWith(color: AppColors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      hintStyle:
+                          AppTextStyles.body1.copyWith(color: AppColors.gray),
+                      filled: true,
+                      fillColor: AppColors.grayDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Confirm Password Input
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    style: AppTextStyles.body1.copyWith(color: AppColors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Confirm Password',
+                      hintStyle:
+                          AppTextStyles.body1.copyWith(color: AppColors.gray),
+                      filled: true,
+                      fillColor: AppColors.grayDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Sign Up Button
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleRegister,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: AppColors.white)
+                          : Text(
+                              'Sign up',
+                              style: AppTextStyles.h2.copyWith(
+                                color: AppColors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Continue with Google Button
+                  SizedBox(
+                    height: 56,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // TODO: Implement Google sign in
                       },
-                      child: Text(
-                        'Login',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.gray, width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
                         ),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Continue with ',
+                            style: AppTextStyles.body1.copyWith(
+                              color: AppColors.grayLight,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'G',
+                            style: AppTextStyles.h3.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
+                  ),
+                  const SizedBox(height: 32),
+                  // Sign In Link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account? ",
+                        style: AppTextStyles.body2
+                            .copyWith(color: AppColors.grayLight),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                          );
+                        },
+                        child: Text(
+                          'Sign in',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
