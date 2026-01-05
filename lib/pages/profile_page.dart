@@ -6,8 +6,7 @@ import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/widgets/primary_button.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/pages/settings_page.dart';
-
-// Test profile page for testing backend
+import 'package:flexly/pages/edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,11 +27,13 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    final user = await _authService.getUser();
-    setState(() {
-      _userData = user;
-      _isLoading = false;
-    });
+    final user = await _authService.getProfile();
+    if (mounted) {
+      setState(() {
+        _userData = user;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -56,7 +57,8 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -70,7 +72,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildOutlineButton(
                         'Edit profile',
                         Icons.edit_outlined,
-                        () {},
+                        () async {
+                          if (_userData != null) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditProfilePage(userData: _userData!),
+                              ),
+                            );
+                            if (result == true) {
+                              _loadUserData();
+                            }
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -117,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 24),
                       // Nick name
                       Text(
-                        'Nick name',
+                        _userData?['name'] ?? 'Nick name',
                         style: AppTextStyles.h3.copyWith(
                           color: AppColors.white,
                           fontSize: 20,
@@ -126,7 +141,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '@username',
+                        _userData?['username'] != null
+                            ? '@${_userData!['username']}'
+                            : '@username',
                         style: AppTextStyles.body2.copyWith(
                           color: AppColors.grayLight,
                           fontSize: 13,
@@ -137,19 +154,22 @@ class _ProfilePageState extends State<ProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatColumn('Followers', '12'),
+                          _buildStatColumn(
+                              'Followers', '${_userData?['followers'] ?? 0}'),
                           Container(
                             width: 1,
                             height: 40,
                             color: AppColors.grayDark,
                           ),
-                          _buildStatColumn('Following', '23'),
+                          _buildStatColumn(
+                              'Following', '${_userData?['following'] ?? 0}'),
                           Container(
                             width: 1,
                             height: 40,
                             color: AppColors.grayDark,
                           ),
-                          _buildStatColumn('Score', '160'),
+                          _buildStatColumn(
+                              'Score', '${_userData?['score'] ?? 0}'),
                         ],
                       ),
                     ],
@@ -164,7 +184,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildSmallCard(
                         icon: Icons.local_fire_department,
                         label: 'Current Streak',
-                        value: '10 days',
+                        value: '${_userData?['streak'] ?? 0} days',
                         iconColor: AppColors.primary,
                       ),
                     ),
@@ -173,7 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildSmallCard(
                         icon: Icons.analytics_outlined,
                         label: 'Analytics Tracked',
-                        value: '84',
+                        value: '${_userData?['analyticsTracked'] ?? 0}',
                         iconColor: Colors.blue,
                       ),
                     ),

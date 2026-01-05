@@ -17,6 +17,35 @@ const userSchema = new mongoose.Schema({
       'Please add a valid email',
     ],
   },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows null/undefined to not conflict
+  },
+  bio: {
+    type: String,
+    default: '',
+  },
+  followers: {
+    type: Number,
+    default: 0,
+  },
+  following: {
+    type: Number,
+    default: 0,
+  },
+  score: {
+    type: Number,
+    default: 0,
+  },
+  streak: {
+    type: Number,
+    default: 0,
+  },
+  analyticsTracked: {
+    type: Number,
+    default: 0,
+  },
   password: {
     type: String,
     required: [true, 'Please add a password'],

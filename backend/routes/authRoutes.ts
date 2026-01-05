@@ -1,5 +1,11 @@
 import express from 'express'
-import { registerUser, loginUser, getMe } from '../controllers/authController'
+import {
+  registerUser,
+  loginUser,
+  getMe,
+  updateProfile,
+} from '../controllers/authController'
+import { protect } from '../middleware/authMiddleware'
 
 const router = express.Router()
 
@@ -10,7 +16,9 @@ router.post('/register', registerUser)
 router.post('/login', loginUser)
 
 // Route to get current user data (Protected)
-// TODO: Add auth middleware to protect this route
-router.get('/me', getMe)
+router.get('/me', protect, getMe)
+
+// Route to update user profile (Protected)
+router.put('/profile', protect, updateProfile)
 
 export default router

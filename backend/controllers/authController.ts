@@ -88,8 +88,52 @@ export const loginUser = async (req: Request, res: Response) => {
  * @access  Private
  */
 export const getMe = async (req: Request, res: Response) => {
-  // TODO: Implement middleware to set req.user from token
-  // const { _id, name, email } = await User.findById(req.user.id);
-  // res.status(200).json({ id: _id, name, email });
-  res.status(200).json({ message: 'User data display' })
+  try {
+    const user = await User.findById((req as any).user.id)
+    res.status(200).json(user)
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+/**
+ * @desc    Update user profile
+ * @route   PUT /api/auth/profile
+ * @access  Private
+ */
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById((req as any).user.id)
+
+    if (user) {
+      user.name = req.body.name || user.name
+      user.email = req.body.email || user.email
+      if (req.body.username) user.username = req.body.username
+      if (req.body.bio) user.bio = req.body.bio
+
+      if (req.body.password) {
+        user.password = req.body.password
+      }
+
+      const updatedUser = await user.save()
+
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        bio: updatedUser.bio,
+        followers: updatedUser.followers,
+        following: updatedUser.following,
+        score: updatedUser.score,
+        streak: updatedUser.streak,
+        analyticsTracked: updatedUser.analyticsTracked,
+        token: generateToken(updatedUser._id.toString()),
+      })
+    } else {
+      res.status(404).json({ message: 'User not found' })
+    }
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
 }
