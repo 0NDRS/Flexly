@@ -3,6 +3,8 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:flexly/widgets/primary_button.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -20,6 +22,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
   late TextEditingController _emailController;
+  File? _profileImage;
   bool _isLoading = false;
 
   @override
@@ -43,6 +46,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -57,7 +71,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       'email': _emailController.text,
     };
 
-    final result = await _authService.updateProfile(updates);
+    final result = await _authService.updateProfile(updates,
+        profilePicture: _profileImage);
 
     setState(() {
       _isLoading = false;
@@ -96,6 +111,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
           key: _formKey,
           child: Column(
             children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: AppColors.grayDark,
+                    shape: BoxShape.circle,
+                    image: _profileImage != null
+                        ? DecorationImage(
+                            image: FileImage(_profileImage!),
+                            fit: BoxFit.cover,
+                          )
+                        : (widget.userData['profilePicture'] != null &&
+                                widget.userData['profilePicture'] != '')
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                    widget.userData['profilePicture']),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                    border: Border.all(color: AppColors.primary, width: 2),
+                  ),
+                  child: (_profileImage == null &&
+                          (widget.userData['profilePicture'] == null ||
+                              widget.userData['profilePicture'] == ''))
+                      ? const Icon(Icons.camera_alt,
+                          color: Colors.white, size: 40)
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 24),
               _buildTextField('Name', _nameController),
               const SizedBox(height: 16),
               _buildTextField('Username', _usernameController),

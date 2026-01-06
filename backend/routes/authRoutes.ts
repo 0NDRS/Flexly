@@ -6,6 +6,7 @@ import {
   updateProfile,
 } from '../controllers/authController'
 import { protect } from '../middleware/authMiddleware'
+import upload from '../middleware/uploadMiddleware'
 
 const router = express.Router()
 
@@ -19,6 +20,6 @@ router.post('/login', loginUser)
 router.get('/me', protect, getMe)
 
 // Route to update user profile (Protected)
-router.put('/profile', protect, updateProfile)
+router.put('/profile', protect, upload.single('profilePicture'), updateProfile)
 
 export default router

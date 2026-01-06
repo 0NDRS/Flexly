@@ -3,25 +3,42 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/data/mock_data.dart';
 import 'package:flexly/pages/home.dart';
+import 'package:flexly/services/auth_service.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends StatefulWidget {
   const HomeHeader({super.key});
 
-  void _navigateToProfile(BuildContext context) {
-    // Find the HomePage in the widget tree and navigate to profile tab
-    if (context.findAncestorWidgetOfExactType<HomePage>() != null) {
-      // Since we're inside HomePage which has IndexedStack with tab navigation,
-      // we need to find the state and call onTabChange
-      // Alternative: Use named routes or Provider pattern
-      // For now, we'll use a simple approach by going to home and then to profile
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
-      // Then trigger profile tab
-      Future.delayed(const Duration(milliseconds: 100), () {
-        // This will be handled by the HomePage itself
+  @override
+  State<HomeHeader> createState() => _HomeHeaderState();
+}
+
+class _HomeHeaderState extends State<HomeHeader> {
+  final _authService = AuthService();
+  Map<String, dynamic>? _userData;
+  String? _profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = await _authService.getUser();
+    if (mounted) {
+      setState(() {
+        _userData = user;
+        _profileImageUrl = user?['profilePicture'];
       });
     }
+  }
+
+  void _navigateToProfile(BuildContext context) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const HomePage(initialIndex: 4),
+      ),
+    );
   }
 
   @override
@@ -29,39 +46,34 @@ class HomeHeader extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-          onTap: () {
-            // Navigate to profile page by changing the tab in HomePage
-            // We'll use a more elegant solution with Provider/GetX, but for now:
-            // Navigate to home and pass index to show profile
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const HomePage(initialIndex: 4),
-              ),
-            );
-          },
+          onTap: () => _navigateToProfile(context),
           child: Container(
             width: 52,
             height: 52,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.grayLight, // Placeholder for profile image
+              color: AppColors.grayLight,
+              border: Border.all(color: AppColors.primary, width: 2),
+              image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(_profileImageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
+            child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+                ? const Icon(Icons.person, color: Colors.white)
+                : null,
           ),
         ),
         const SizedBox(width: 12),
         GestureDetector(
-          onTap: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const HomePage(initialIndex: 4),
-              ),
-            );
-          },
+          onTap: () => _navigateToProfile(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hi, ${MockData.userName} 👋',
+                'Hi, ${_userData?['username'] ?? _userData?['name']?.split(' ')[0] ?? 'Friend'} 👋',
                 style: AppTextStyles.caption1.copyWith(color: AppColors.white),
               ),
               Text(

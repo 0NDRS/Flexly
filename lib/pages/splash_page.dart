@@ -152,7 +152,7 @@ class _SplashPageState extends State<SplashPage>
                           shape: BoxShape.circle,
                           color: _currentPage == index
                               ? AppColors.white
-                              : AppColors.grayLight.withOpacity(0.5),
+                              : AppColors.grayLight.withValues(alpha: 0.5),
                         ),
                       ),
                     ),

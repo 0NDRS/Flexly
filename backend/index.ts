@@ -31,8 +31,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 app.use('/api/auth', authRoutes)
 app.use('/api/analysis', analysisRoutes)
 
-// Test Route (Deprecated by analysisRoutes, but kept for compatibility if needed)
-// app.get('/api/analysis', ...)
+// Error Handler
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error(err.stack)
+  res.status(500).json({
+    message: err.message || 'Internal Server Error',
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  })
+})
 
 // Start Server
 app.listen(port, () => {

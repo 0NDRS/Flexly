@@ -3,7 +3,6 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:flexly/pages/login_page.dart';
-import 'package:flexly/widgets/primary_button.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/pages/settings_page.dart';
 import 'package:flexly/pages/edit_profile_page.dart';
@@ -105,6 +104,37 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                // Logout Button
+                OutlinedButton(
+                  onPressed: _handleLogout,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: AppColors.grayDark,
+                    side: const BorderSide(color: Colors.red, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.logout,
+                        color: Colors.red,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Log out',
+                        style: AppTextStyles.body2.copyWith(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 32),
 
                 // Profile Image Section
@@ -127,7 +157,20 @@ class _ProfilePageState extends State<ProfilePage> {
                             width: 5,
                           ),
                           color: AppColors.grayLight,
+                          image: _userData?['profilePicture'] != null &&
+                                  _userData!['profilePicture'] != ''
+                              ? DecorationImage(
+                                  image: NetworkImage(
+                                      _userData!['profilePicture']),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
+                        child: _userData?['profilePicture'] == null ||
+                                _userData!['profilePicture'] == ''
+                            ? const Icon(Icons.person,
+                                size: 80, color: Colors.white)
+                            : null,
                       ),
                       const SizedBox(height: 24),
                       // Nick name

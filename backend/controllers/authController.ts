@@ -1,6 +1,8 @@
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import User from '../models/User'
+import { v2 as cloudinary } from 'cloudinary'
+import streamifier from 'streamifier'
 
 /**
  * Generates a JWT token for a user ID.
@@ -43,6 +45,14 @@ export const registerUser = async (req: Request, res: Response) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        followers: user.followers,
+        following: user.following,
+        score: user.score,
+        streak: user.streak,
+        analyticsTracked: user.analyticsTracked,
         token: generateToken(user._id.toString()),
       })
     } else {
@@ -72,6 +82,14 @@ export const loginUser = async (req: Request, res: Response) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        followers: user.followers,
+        following: user.following,
+        score: user.score,
+        streak: user.streak,
+        analyticsTracked: user.analyticsTracked,
         token: generateToken(user._id.toString()),
       })
     } else {
@@ -115,6 +133,34 @@ export const updateProfile = async (req: Request, res: Response) => {
         user.password = req.body.password
       }
 
+      // Handle Profile Picture Upload
+      if (req.file) {
+        // Upload to Cloudinary using stream
+        const uploadFromBuffer = (buffer: Buffer) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { folder: 'profile_pictures' },
+              (error, result) => {
+                if (result) {
+                  resolve(result)
+                } else {
+                  reject(error)
+                }
+              }
+            )
+            streamifier.createReadStream(buffer).pipe(stream)
+          })
+        }
+
+        try {
+          const result: any = await uploadFromBuffer(req.file.buffer)
+          user.profilePicture = result.secure_url
+        } catch (error) {
+          console.error(error)
+          // Continue saving user even if image upload fails
+        }
+      }
+
       const updatedUser = await user.save()
 
       res.json({
@@ -123,6 +169,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         email: updatedUser.email,
         username: updatedUser.username,
         bio: updatedUser.bio,
+        profilePicture: updatedUser.profilePicture,
         followers: updatedUser.followers,
         following: updatedUser.following,
         score: updatedUser.score,

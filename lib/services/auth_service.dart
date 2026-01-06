@@ -92,21 +92,31 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile(
-      Map<String, dynamic> updates) async {
+  Future<Map<String, dynamic>> updateProfile(Map<String, String> updates,
+      {File? profilePicture}) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No token found'};
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(updates),
-      );
+      final uri = Uri.parse('$baseUrl/profile');
+      final request = http.MultipartRequest('PUT', uri)
+        ..headers['Authorization'] = 'Bearer $token';
 
+      // Add text fields
+      updates.forEach((key, value) {
+        request.fields[key] = value;
+      });
+
+      // Add file if present
+      if (profilePicture != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profilePicture',
+          profilePicture.path,
+        ));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {

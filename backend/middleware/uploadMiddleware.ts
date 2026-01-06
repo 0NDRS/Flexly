@@ -8,11 +8,13 @@ const checkFileType = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const filetypes = /jpg|jpeg|png/
+  // Allow jpeg, jpg, png, gif, webp, heic
+  const filetypes = /jpeg|jpg|png|gif|webp|heic/
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase())
-  const mimetype = filetypes.test(file.mimetype)
+  // Mimetype check can be unreliable depending on client, so we might rely mostly on extension or relax it
+  const mimetype = /image\/.*/.test(file.mimetype)
 
-  if (extname && mimetype) {
+  if (extname || mimetype) {
     return cb(null, true)
   } else {
     cb(new Error('Images only!'))

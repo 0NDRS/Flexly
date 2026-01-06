@@ -60,148 +60,148 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Header with logo and text
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  // Header with logo and text
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(34),
+                              child: Image.asset(
+                                'assets/icon/app_icon.png',
+                                width: 100,
+                                height: 100,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Tell us about\nyour goal',
+                                  style: AppTextStyles.h1.copyWith(
+                                    fontSize: 28,
+                                    color: AppColors.white,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 3,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Powered by Flex Intelligence™',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.grayLight,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  // Goals List - Scrollable with Blur Effect
+                  Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(34),
-                            child: Image.asset(
-                              'assets/icon/app_icon.png',
-                              width: 100,
-                              height: 100,
+                      SizedBox(
+                        height: 280,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              ...goals.map((goal) => Padding(
+                                    padding:
+                                        const EdgeInsets.only(bottom: 16.0),
+                                    child: _buildGoalOption(goal),
+                                  )),
+                              // Extra space to allow scrolling last item above blur
+                              const SizedBox(height: 60),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Blur overlay at the bottom
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                AppColors.backgroundDark
+                                    .withValues(alpha: 0.95),
+                                AppColors.backgroundDark,
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  // Finish Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: PrimaryButton(
+                      text: 'Finish',
+                      onPressed: _handleFinish,
+                      size: ButtonSize.large,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  // Skip Option at Bottom
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Prefer to do this later?',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.grayLight,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _handleSkip,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Tell us about\nyour goal',
-                                style: AppTextStyles.h1.copyWith(
-                                  fontSize: 28,
+                                'Skip',
+                                style: AppTextStyles.body2.copyWith(
                                   color: AppColors.white,
-                                  height: 1.2,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                maxLines: 3,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                '>',
+                                style: TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Powered by Flex Intelligence™',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.grayLight,
-                          fontSize: 12,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 48),
-                // Goals List - Scrollable with Blur Effect
-                Stack(
-                  children: [
-                    SizedBox(
-                      height: 280,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            ...goals
-                                .map((goal) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 16.0),
-                                      child: _buildGoalOption(goal),
-                                    ))
-                                .toList(),
-                            // Extra space to allow scrolling last item above blur
-                            const SizedBox(height: 60),
-                          ],
-                        ),
-                      ),
+                      ],
                     ),
-                    // Blur overlay at the bottom
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              AppColors.backgroundDark.withOpacity(0.95),
-                              AppColors.backgroundDark,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Finish Button
-                SizedBox(
-                  width: double.infinity,
-                  child: PrimaryButton(
-                    text: 'Finish',
-                    onPressed: _handleFinish,
-                    size: ButtonSize.large,
                   ),
-                ),
-                const SizedBox(height: 48),
-                // Skip Option at Bottom
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        'Prefer to do this later?',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.grayLight,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: _handleSkip,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Skip',
-                              style: AppTextStyles.body2.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '>',
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           ),
         ),
