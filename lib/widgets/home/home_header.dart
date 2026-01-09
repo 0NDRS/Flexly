@@ -3,6 +3,10 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/home.dart';
 import 'package:flexly/services/auth_service.dart';
+import 'package:flexly/services/notification_service.dart';
+import 'package:flexly/pages/notifications_page.dart';
+import 'package:flexly/services/event_bus.dart';
+import 'dart:async';
 
 class HomeHeader extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -18,8 +22,11 @@ class HomeHeader extends StatefulWidget {
 
 class _HomeHeaderState extends State<HomeHeader> {
   final _authService = AuthService();
+  final _notificationService = NotificationService();
   Map<String, dynamic>? _userData;
   String? _profileImageUrl;
+  bool _hasUnreadNotifications = false;
+  StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
@@ -29,6 +36,35 @@ class _HomeHeaderState extends State<HomeHeader> {
       _profileImageUrl = widget.userData?['profilePicture'];
     } else {
       _loadUserData();
+    }
+    _checkNotifications();
+    _eventSubscription = EventBus().stream.listen((event) {
+      if (event is NotificationsReadEvent) {
+        if (mounted) {
+          setState(() {
+            _hasUnreadNotifications = false;
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkNotifications() async {
+    try {
+      final notifications = await _notificationService.getNotifications();
+      if (mounted) {
+        setState(() {
+          _hasUnreadNotifications = notifications.any((n) => !n.read);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking notifications: $e');
     }
   }
 
@@ -104,38 +140,48 @@ class _HomeHeaderState extends State<HomeHeader> {
           ),
         ),
         const Spacer(),
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.grayDark,
-            border: Border.all(color: AppColors.gray, width: 1),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.rotate(
-                angle: 0,
-                child: const Icon(
+        GestureDetector(
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsPage(),
+              ),
+            );
+            // Refresh state when coming back
+            _checkNotifications();
+          },
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.grayDark,
+              border: Border.all(color: AppColors.gray, width: 1),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(
                   Icons.notifications_outlined,
                   color: AppColors.white,
                   size: 24,
                 ),
-              ),
-              Positioned(
-                top: 14,
-                right: 16,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
+                if (_hasUnreadNotifications)
+                  Positioned(
+                    top: 14,
+                    right: 16,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

@@ -5,7 +5,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
 
-// Helper to upload buffer to Cloudinary
 const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -20,12 +19,8 @@ const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
   })
 }
 
-// @desc    Upload images and analyze physique
-// @route   POST /api/analysis
-// @access  Private
 export const analyzePhysique = async (req: Request, res: Response) => {
   try {
-    // Debug: Check API Key
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.error('GEMINI_API_KEY is missing in environment variables')
@@ -35,20 +30,15 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       return
     }
 
-    // Initialize Gemini (Lazy initialization to ensure env is loaded)
     const genAI = new GoogleGenerativeAI(apiKey)
 
-    // 1. Handle Files
     const files = req.files as Express.Multer.File[]
     if (!files || files.length === 0) {
       res.status(400).json({ message: 'Please upload at least one image' })
       return
     }
 
-    // 2. Prepare Images for Gemini & Upload to Cloudinary
-    // We do this in parallel for efficiency
     const processingPromises = files.map(async (file) => {
-      // Prepare for Gemini
       const geminiPart = {
         inlineData: {
           data: file.buffer.toString('base64'),
@@ -56,7 +46,6 @@ export const analyzePhysique = async (req: Request, res: Response) => {
         },
       }
 
-      // Upload to Cloudinary
       const cloudinaryUrl = await uploadToCloudinary(file.buffer)
 
       return { geminiPart, cloudinaryUrl }
@@ -100,13 +89,10 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       Do not include markdown formatting like \`\`\`json.
     `
 
-    // 3. Call Gemini API
     const result = await model.generateContent([prompt, ...imageParts])
     const response = await result.response
     const text = response.text()
 
-    // 4. Parse Response
-    // Clean up potential markdown code blocks
     const cleanJson = text
       .replace(/```json/g, '')
       .replace(/```/g, '')
@@ -120,10 +106,8 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       throw new Error('AI Analysis failed to generate valid data')
     }
 
-    // Calculate Overall
     const ratings: Record<string, number> = aiData.ratings
 
-    // Filter out 0 ratings (not visible) for the average calculation
     const validRatings = Object.values(ratings).filter((r) => r > 0)
 
     const overall =
@@ -133,15 +117,8 @@ export const analyzePhysique = async (req: Request, res: Response) => {
               validRatings.reduce((a, b) => a + b, 0) / validRatings.length
             ).toFixed(1)
           )
-        : 0 // Fallback if nothing is visible
+        : 0
 
-    // If overall is 0 (i.e., nothing was visible), we perhaps shouldn't save a broken analysis?
-    // User requested: "if some of the results is 0 it shouldn't be counted"
-    // But we still save it so they see the advice "Couldn't see legs etc".
-    // However, for the USER STATS (Score), we probably shouldn't add 0.
-
-    // 5. Save to Database
-    // Use the authenticated user from the token
     const userId = (req as any).user?._id
     if (!userId) {
       res.status(401).json({ message: 'User not authenticated' })
@@ -150,23 +127,18 @@ export const analyzePhysique = async (req: Request, res: Response) => {
 
     const analysis = await Analysis.create({
       user: userId,
-      imageUrls, // Now these are Cloudinary URLs
+      imageUrls,
       ratings: { ...ratings, overall },
       advice: aiData.advice,
-      adviceTitle: aiData.adviceTitle || 'Analysis Result', // Fallback
+      adviceTitle: aiData.adviceTitle || 'Analysis Result',
     })
 
-    // Update User Stats (Score, Analytics Tracked, Streak)
     const userToUpdate = await User.findById(userId)
     if (userToUpdate) {
-      // 1. Analytics Tracked
       userToUpdate.analyticsTracked = (userToUpdate.analyticsTracked || 0) + 1
 
-      // Fetch all analyses to calculate accurate averages for leaderboard
       const allAnalyses = await Analysis.find({ user: userId })
 
-      // 2. Score (Now = Average Overall Rating)
-      // We calculate it from all analyses to be accurate
       const validAnalyses = allAnalyses.filter(
         (a: any) => a.ratings.overall > 0
       )
@@ -175,8 +147,6 @@ export const analyzePhysique = async (req: Request, res: Response) => {
           (sum: number, a: any) => sum + a.ratings.overall,
           0
         )
-        // Store as float with 1 decimal precision, or just float.
-        // User model `score` is Number, so it handles floats.
         userToUpdate.score = parseFloat(
           (totalOverall / validAnalyses.length).toFixed(1)
         )
@@ -184,7 +154,6 @@ export const analyzePhysique = async (req: Request, res: Response) => {
         userToUpdate.score = 0
       }
 
-      // 2.5 Recalculate Muscle Averages
       const muscleSums: any = {
         arms: 0,
         chest: 0,
@@ -204,7 +173,6 @@ export const analyzePhysique = async (req: Request, res: Response) => {
 
       allAnalyses.forEach((a: any) => {
         const r = a.ratings
-        // Iterate keys
         Object.keys(muscleSums).forEach((key) => {
           if (r[key] && r[key] > 0) {
             muscleSums[key] += r[key]
@@ -223,35 +191,27 @@ export const analyzePhysique = async (req: Request, res: Response) => {
 
       userToUpdate.muscleStats = muscleAverages
 
-      // 3. Streak Logic
-      // Find the last analysis *before* this new one
       const lastAnalysis = await Analysis.findOne({
         user: userId,
         _id: { $ne: analysis._id },
       }).sort({ createdAt: -1 })
 
       if (!lastAnalysis) {
-        // First analysis ever starts a streak
         userToUpdate.streak = 1
       } else {
         const lastDate = new Date(lastAnalysis.createdAt as any)
-        lastDate.setHours(0, 0, 0, 0) // Normalize to midnight
-
+        lastDate.setHours(0, 0, 0, 0)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
-        // Calculate difference in days
         const diffTime = Math.abs(today.getTime() - lastDate.getTime())
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
         if (diffDays === 1) {
-          // Consecutive day: increment streak
           userToUpdate.streak = (userToUpdate.streak || 0) + 1
         } else if (diffDays > 1) {
-          // Missed a day: reset streak
           userToUpdate.streak = 1
         }
-        // If diffDays == 0 (same day), maintain current streak
       }
 
       await userToUpdate.save()
@@ -266,18 +226,32 @@ export const analyzePhysique = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get all analyses for a user
-// @route   GET /api/analysis
-// @access  Private
 export const getAnalyses = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
 
     if (!userId) {
       res.status(401).json({ message: 'User not authenticated' })
       return
     }
 
+    const analyses = await Analysis.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+
+    res.json(analyses)
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+export const getAnalysesByUserId = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId
     const analyses = await Analysis.find({ user: userId }).sort({
       createdAt: -1,
     })
@@ -287,16 +261,111 @@ export const getAnalyses = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get analyses by user ID
-// @route   GET /api/analysis/user/:userId
-// @access  Private
-export const getAnalysesByUserId = async (req: Request, res: Response) => {
+export const getFeed = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId
-    const analyses = await Analysis.find({ user: userId }).sort({
-      createdAt: -1,
-    })
+    const currentUser = (req as any).user
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
+
+    if (!currentUser) {
+      res.status(401).json({ message: 'User not authenticated' })
+      return
+    }
+
+    const followingIds = currentUser.followingList || []
+    if (followingIds.length === 0) {
+      res.json([])
+      return
+    }
+
+    const analyses = await Analysis.find({ user: { $in: followingIds } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('user', 'name username profilePicture')
+
     res.json(analyses)
+  } catch (error) {
+    console.error('Get Feed Error:', error)
+    res.status(500).json({ message: 'Server error' })
+  }
+}
+
+export const deleteAnalysis = async (req: Request, res: Response) => {
+  try {
+    const analysisId = req.params.id
+    const user = (req as any).user
+
+    const analysis = await Analysis.findById(analysisId)
+
+    if (!analysis) {
+      res.status(404).json({ message: 'Analysis not found' })
+      return
+    }
+
+    if (analysis.user.toString() !== user._id.toString()) {
+      res.status(401).json({ message: 'Not authorized' })
+      return
+    }
+
+    await analysis.deleteOne()
+
+    const remainingAnalyses = await Analysis.find({ user: user._id })
+    const validAnalyses = remainingAnalyses.filter(
+      (a: any) => a.ratings?.overall > 0
+    )
+
+    let newScore = 0
+    const muscleSums: any = {
+      arms: 0,
+      chest: 0,
+      abs: 0,
+      shoulders: 0,
+      legs: 0,
+      back: 0,
+    }
+    const muscleCounts: any = {
+      arms: 0,
+      chest: 0,
+      abs: 0,
+      shoulders: 0,
+      legs: 0,
+      back: 0,
+    }
+
+    if (validAnalyses.length > 0) {
+      const total = validAnalyses.reduce(
+        (sum: number, a: any) => sum + a.ratings.overall,
+        0
+      )
+      newScore = parseFloat((total / validAnalyses.length).toFixed(1))
+
+      remainingAnalyses.forEach((a: any) => {
+        const r = a.ratings || {}
+        Object.keys(muscleSums).forEach((key) => {
+          if (r[key] && r[key] > 0) {
+            muscleSums[key] += r[key]
+            muscleCounts[key]++
+          }
+        })
+      })
+    }
+
+    const muscleAverages: any = {}
+    Object.keys(muscleSums).forEach((key) => {
+      muscleAverages[key] =
+        muscleCounts[key] > 0
+          ? parseFloat((muscleSums[key] / muscleCounts[key]).toFixed(1))
+          : 0
+    })
+
+    await User.findByIdAndUpdate(user._id, {
+      score: newScore,
+      muscleStats: muscleAverages,
+    })
+
+    res.json({ message: 'Analysis removed' })
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })
   }

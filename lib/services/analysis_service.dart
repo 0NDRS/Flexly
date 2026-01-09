@@ -47,13 +47,13 @@ class AnalysisService {
     }
   }
 
-  Future<List<dynamic>> getAnalyses() async {
+  Future<List<dynamic>> getAnalyses({int page = 1, int limit = 10}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
       final response = await http.get(
-        Uri.parse(baseUrl),
+        Uri.parse('$baseUrl?page=$page&limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -90,6 +90,50 @@ class AnalysisService {
       }
     } catch (e) {
       throw Exception('Error fetching user analyses: $e');
+    }
+  }
+
+  Future<List<dynamic>> getFeed({int page = 1, int limit = 10}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/feed?page=$page&limit=$limit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load feed');
+      }
+    } catch (e) {
+      throw Exception('Error fetching feed: $e');
+    }
+  }
+
+  Future<void> deleteAnalysis(String analysisId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$analysisId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete analysis');
+      }
+    } catch (e) {
+      throw Exception('Error deleting analysis: $e');
     }
   }
 

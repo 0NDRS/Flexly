@@ -5,6 +5,7 @@ import 'package:flexly/services/user_service.dart';
 import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:intl/intl.dart';
+import 'package:flexly/services/event_bus.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -77,6 +78,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 newStatus ? currentFollowers + 1 : currentFollowers - 1;
           }
         });
+        EventBus().fire(UserFollowEvent());
       }
     } catch (e) {
       if (mounted) {
@@ -233,21 +235,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           Container(
                             width: 1,
                             height: 40,
-                            color: AppColors.grayLight.withOpacity(0.2),
+                            color: AppColors.grayLight.withValues(alpha: 0.2),
                           ),
                           _buildStatColumn(
                               'Following', '${_userData?['following'] ?? 0}'),
                           Container(
                             width: 1,
                             height: 40,
-                            color: AppColors.grayLight.withOpacity(0.2),
+                            color: AppColors.grayLight.withValues(alpha: 0.2),
                           ),
                           _buildStatColumn(
                               'Avg. Rating', '${_calculateAverageScore()}'),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      Divider(color: AppColors.grayLight.withOpacity(0.2)),
+                      Divider(
+                          color: AppColors.grayLight.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
                       // Body Stats
                       Row(

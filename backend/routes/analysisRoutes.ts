@@ -3,6 +3,8 @@ import {
   analyzePhysique,
   getAnalyses,
   getAnalysesByUserId,
+  getFeed,
+  deleteAnalysis,
 } from '../controllers/analysisController'
 import upload from '../middleware/uploadMiddleware'
 import { protect } from '../middleware/authMiddleware'
@@ -15,7 +17,13 @@ router.post('/', protect, upload.array('images', 5), analyzePhysique)
 // GET /api/analysis - Get history
 router.get('/', protect, getAnalyses)
 
+// GET /api/analysis/feed - Get feed
+router.get('/feed', protect, getFeed)
+
 // GET /api/analysis/user/:userId - Get public analyses of a user
 router.get('/user/:userId', protect, getAnalysesByUserId)
+
+// DELETE /api/analysis/:id - Delete analysis
+router.delete('/:id', protect, deleteAnalysis)
 
 export default router

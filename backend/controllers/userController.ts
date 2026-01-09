@@ -1,22 +1,18 @@
 import { Request, Response } from 'express'
 import User from '../models/User'
 import Analysis from '../models/Analysis'
+import Notification from '../models/Notification'
 
-// @desc    Get leaderboard
-// @route   GET /api/users/leaderboard
-// @access  Private (to get my rank) or Public? Private is better.
 export const getLeaderboard = async (req: Request, res: Response) => {
   try {
     const currentUserId = (req as any).user?._id
 
-    // Check query params
     const { category, gender, weightClass } = req.query as {
       category?: string
       gender?: string
       weightClass?: string
     }
 
-    // Build Filter
     const filter: any = {}
 
     if (gender && gender !== 'All') {
@@ -33,19 +29,14 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       }
     }
 
-    // Determine Sort Field
     let sortField = 'score'
     if (category && category !== 'Overall') {
-      // Assuming category matches muscleStats keys (arms, chest, etc.)
       const validMuscles = ['arms', 'chest', 'abs', 'shoulders', 'legs', 'back']
       if (validMuscles.includes(category.toLowerCase())) {
         sortField = `muscleStats.${category.toLowerCase()}`
       }
     }
 
-    // LAZY MIGRATION FORCE
-    // Check for users who have a score > 0 but are missing muscleStats OR have legacy high score > 10
-    // This catches users who have valid normal scores but no muscle breakdown yet.
     const messyUsers = await User.find({
       $or: [
         { score: { $gt: 10 } },
@@ -55,7 +46,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
     }).limit(50)
 
     for (const user of messyUsers) {
-      // Fix this user
       const analyses = await Analysis.find({ user: user._id })
       if (analyses.length > 0) {
         const validAnalyses = analyses.filter(
@@ -71,7 +61,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
           user.score = 0
         }
 
-        // Recalc muscles too
         const muscleSums: any = {
           arms: 0,
           chest: 0,
@@ -107,7 +96,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
         user.muscleStats = muscleAverages
         await user.save()
       } else {
-        // no analysis but data present? reset.
         user.score = 0
         user.muscleStats = {
           arms: 0,
@@ -121,7 +109,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       }
     }
 
-    // Fetch Top 50 Users (Now cleaned up mostly)
     const users = await User.find(filter)
       .sort({ [sortField]: -1 })
       .limit(50)
@@ -129,27 +116,16 @@ export const getLeaderboard = async (req: Request, res: Response) => {
         'name username profilePicture score muscleStats gender weight country'
       )
 
-    // Iterate and fix any 0.0s for muscles if they actually have data (unlikely if score is fixed, but robust)
-    // Actually, for display, we just send what we have.
-
-    // Calculate My Rank
     let myRank = -1
     let myData = null
 
     if (currentUserId) {
       const currentUser = await User.findById(currentUserId)
       if (currentUser) {
-        // Apply same filters to rank calculation?
-        // Usually rank is within the filter context.
-        // e.g. "I am rank 5 in Females"
-        // So yes, use the filter.
-
-        // Get my value for the sort field
         let myValue = 0
         if (sortField === 'score') {
           myValue = currentUser.score || 0
         } else {
-          // muscleStats.arms
           const parts = sortField.split('.')
           if (currentUser.muscleStats) {
             myValue = (currentUser.muscleStats as any)[parts[1]] || 0
@@ -163,8 +139,6 @@ export const getLeaderboard = async (req: Request, res: Response) => {
 
         myRank = betterUsersCount + 1
 
-        // If I am in the top 50, I am already in `users`.
-        // If not, I still need my data to show at the bottom.
         myData = {
           _id: currentUser._id,
           name: currentUser.name,
@@ -186,15 +160,11 @@ export const getLeaderboard = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get user profile by ID
-// @route   GET /api/users/:id
-// @access  Private
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id).select('-password')
     if (user) {
       const currentUserId = (req as any).user._id
-      // Check if following
       const isFollowing =
         (user as any).followersList &&
         (user as any).followersList.includes(currentUserId)
@@ -208,9 +178,6 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Follow/Unfollow user
-// @route   POST /api/users/:id/follow
-// @access  Private
 export const followUser = async (req: Request, res: Response) => {
   try {
     const targetUserId = req.params.id
@@ -229,20 +196,15 @@ export const followUser = async (req: Request, res: Response) => {
       return
     }
 
-    // Check if already following
     const isFollowing =
       (currentUser as any).followingList &&
       (currentUser as any).followingList.includes(targetUserId)
 
     if (isFollowing) {
-      // Unfollow
-      // Remove from currentUser followingList
       ;(currentUser as any).followingList = (
         currentUser as any
       ).followingList.filter((id: any) => id.toString() !== targetUserId)
       currentUser.following = (currentUser.followingList as any).length
-
-      // Remove from targetUser followersList
       ;(targetUser as any).followersList = (
         targetUser as any
       ).followersList.filter(
@@ -255,7 +217,6 @@ export const followUser = async (req: Request, res: Response) => {
 
       res.json({ message: 'Unfollowed', isFollowing: false })
     } else {
-      // Follow
       if (!(currentUser as any).followingList) currentUser.followingList = []
       if (!(targetUser as any).followersList) targetUser.followersList = []
 
@@ -268,9 +229,46 @@ export const followUser = async (req: Request, res: Response) => {
       await currentUser.save()
       await targetUser.save()
 
+      await Notification.create({
+        recipient: targetUserId,
+        sender: currentUserId,
+        type: 'follow',
+      })
+
       res.json({ message: 'Followed', isFollowing: true })
     }
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+export const searchUsers = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string
+    const currentUserId = (req as any).user._id
+
+    if (!query) {
+      res.json([])
+      return
+    }
+
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: currentUserId } },
+        {
+          $or: [
+            { name: { $regex: query, $options: 'i' } },
+            { username: { $regex: query, $options: 'i' } },
+          ],
+        },
+      ],
+    })
+      .select('name username profilePicture')
+      .limit(20)
+
+    res.json(users)
+  } catch (error) {
+    console.error('Search Users Error:', error)
+    res.status(500).json({ message: 'Server error' })
   }
 }

@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/pages/settings_page.dart';
 import 'package:flexly/pages/edit_profile_page.dart';
+import 'package:flexly/services/event_bus.dart';
+import 'dart:async';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -23,11 +25,23 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? _userData;
   List<dynamic> _analyses = [];
   bool _isLoading = true;
+  StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _eventSubscription = EventBus().stream.listen((event) {
+      if (event is AnalysisDeletedEvent || event is UserFollowEvent) {
+        _loadUserData();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -311,6 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           analysis['advice'] ?? '',
                                       imageUrls: imageUrls,
                                       isMe: true,
+                                      analysisId: analysis['_id'],
                                     ),
                                   ),
                                 );

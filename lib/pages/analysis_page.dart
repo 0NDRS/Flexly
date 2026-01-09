@@ -8,6 +8,8 @@ import 'package:flexly/widgets/analysis/history_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:flexly/pages/analysis_loading_page.dart';
 import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/services/event_bus.dart';
+import 'dart:async';
 
 class AnalysisPage extends StatefulWidget {
   const AnalysisPage({super.key});
@@ -17,23 +19,68 @@ class AnalysisPage extends StatefulWidget {
 }
 
 class _AnalysisPageState extends State<AnalysisPage> {
+  final _scrollController = ScrollController();
   List<dynamic> _analyses = [];
   bool _isLoading = true;
+
+  // Pagination
+  int _currentPage = 1;
+  final int _limit = 10;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
     _fetchAnalyses();
+    _scrollController.addListener(_onScroll);
+    _eventSubscription = EventBus().stream.listen((event) {
+      if (event is AnalysisDeletedEvent) {
+        _fetchAnalyses();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _hasMore) {
+      _loadMore();
+    }
   }
 
   Future<void> _fetchAnalyses() async {
+    // Reset pagination
+    if (mounted) {
+      setState(() {
+        _currentPage = 1;
+        _hasMore = true;
+        _isLoading = true;
+      });
+    }
+
     try {
       final service = AnalysisService();
-      final data = await service.getAnalyses();
+      // Fetch stats (all time) separately if possible, or just accept partial stats for now.
+      // Current implementation implies partial stats.
+      final data = await service.getAnalyses(page: 1, limit: _limit);
+
       if (mounted) {
         setState(() {
           _analyses = data;
           _isLoading = false;
+          if (data.length < _limit) {
+            _hasMore = false;
+          }
         });
       }
     } catch (e) {
@@ -44,6 +91,41 @@ class _AnalysisPageState extends State<AnalysisPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading history: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore) return;
+
+    if (mounted) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
+
+    try {
+      final service = AnalysisService();
+      final nextPage = _currentPage + 1;
+      final newItems = await service.getAnalyses(page: nextPage, limit: _limit);
+
+      if (mounted) {
+        setState(() {
+          if (newItems.isNotEmpty) {
+            _analyses.addAll(newItems);
+            _currentPage = nextPage;
+          }
+          if (newItems.length < _limit) {
+            _hasMore = false;
+          }
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
       }
     }
   }
@@ -65,8 +147,9 @@ class _AnalysisPageState extends State<AnalysisPage> {
     String advice,
     List<String> imageUrls,
     String adviceTitle,
-  ) {
-    Navigator.push(
+    String? analysisId,
+  ) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AnalysisDetailPage(
@@ -76,9 +159,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
           adviceDescription: advice,
           imageUrls: imageUrls,
           adviceTitle: adviceTitle,
+          analysisId: analysisId,
         ),
       ),
     );
+
+    if (result == true) {
+      _fetchAnalyses();
+    }
   }
 
   @override
@@ -87,6 +175,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
       child: RefreshIndicator(
         onRefresh: _fetchAnalyses,
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -186,6 +275,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                           analysis['advice'] ?? '',
                           imageUrls,
                           analysis['adviceTitle'] ?? 'Analysis Result',
+                          analysis['_id'],
                         ),
                       );
                     },

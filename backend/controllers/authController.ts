@@ -5,11 +5,6 @@ import Analysis from '../models/Analysis'
 import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
 
-/**
- * Generates a JWT token for a user ID.
- * @param id - The user ID to encode in the token.
- * @returns A signed JWT token string.
- */
 const generateToken = (id: string) => {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined in environment variables')
@@ -19,16 +14,10 @@ const generateToken = (id: string) => {
   })
 }
 
-/**
- * @desc    Register a new user
- * @route   POST /api/auth/register
- * @access  Public
- */
 export const registerUser = async (req: Request, res: Response) => {
   const { name, email, password } = req.body
 
   try {
-    // Check if user already exists
     const userExists = await User.findOne({ email })
 
     if (userExists) {
@@ -36,10 +25,8 @@ export const registerUser = async (req: Request, res: Response) => {
       return
     }
 
-    // Create new user
     let username = req.body.username
     if (!username) {
-      // Generate username from name if not provided
       const baseName = name.toLowerCase().replace(/\s+/g, '')
       const randomSuffix = Math.floor(1000 + Math.random() * 9000)
       username = `${baseName}${randomSuffix}`
@@ -53,7 +40,6 @@ export const registerUser = async (req: Request, res: Response) => {
     })
 
     if (user) {
-      // Respond with user data and token
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -81,20 +67,12 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 }
 
-/**
- * @desc    Authenticate a user and get token
- * @route   POST /api/auth/login
- * @access  Public
- */
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body
 
   try {
-    // Check for user by email
-    // We need to explicitly select password because it's set to select: false in schema
     const user = await User.findOne({ email }).select('+password')
 
-    // Check if user exists and password matches
     if (user && (await (user as any).matchPassword(password))) {
       res.json({
         _id: user._id,
@@ -123,24 +101,16 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 }
 
-/**
- * @desc    Get current user data
- * @route   GET /api/auth/me
- * @access  Private
- */
 export const getMe = async (req: Request, res: Response) => {
   try {
     const user = await User.findById((req as any).user.id)
 
-    // Self-healing: Recalculate stats if score is 0 OR score > 10 (legacy) or muscleStats missing
-    // We assume max average score is 10. If it's higher, it's a legacy sum.
     if (
       user &&
       (!user.score || user.score === 0 || user.score > 10 || !user.muscleStats)
     ) {
       const analyses = await Analysis.find({ user: user._id })
       if (analyses.length > 0) {
-        // 1. Calculate Score
         const validAnalyses = analyses.filter(
           (a: any) => a.ratings?.overall > 0
         )
@@ -156,7 +126,6 @@ export const getMe = async (req: Request, res: Response) => {
           user.score = 0
         }
 
-        // 2. Calculate Muscle Stats
         const muscleSums: any = {
           arms: 0,
           chest: 0,
@@ -195,7 +164,6 @@ export const getMe = async (req: Request, res: Response) => {
 
         await user.save()
       } else {
-        // If data is weird but no analyses, just reset to 0
         if (user.score > 10) {
           user.score = 0
           user.muscleStats = {
@@ -217,11 +185,6 @@ export const getMe = async (req: Request, res: Response) => {
   }
 }
 
-/**
- * @desc    Update user profile
- * @route   PUT /api/auth/profile
- * @access  Private
- */
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const user = await User.findById((req as any).user.id)
@@ -242,9 +205,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         user.password = req.body.password
       }
 
-      // Handle Profile Picture Upload
       if (req.file) {
-        // Upload to Cloudinary using stream
         const uploadFromBuffer = (buffer: Buffer) => {
           return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
@@ -266,7 +227,6 @@ export const updateProfile = async (req: Request, res: Response) => {
           user.profilePicture = result.secure_url
         } catch (error) {
           console.error(error)
-          // Continue saving user even if image upload fails
         }
       }
 

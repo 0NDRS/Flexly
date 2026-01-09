@@ -7,8 +7,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flexly/services/leaderboard_service.dart';
 import 'package:flexly/pages/home.dart';
 import 'package:flexly/pages/user_profile_page.dart';
-
-import 'package:flexly/pages/home.dart';
+import 'package:flexly/services/event_bus.dart';
+import 'dart:async';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -93,11 +93,23 @@ class _StatisticsTabState extends State<StatisticsTab> {
   List<dynamic> _analyses = [];
   Map<String, double> _averageMuscleRatings = {};
   double _overallAverage = 0;
+  StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _eventSubscription = EventBus().stream.listen((event) {
+      if (event is AnalysisDeletedEvent) {
+        _loadData();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -449,6 +461,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   String _selectedCategory = 'Overall';
   String _selectedGender = 'All';
   String _selectedWeight = 'All';
+  StreamSubscription? _eventSubscription;
 
   final List<String> _categories = [
     'Overall',
@@ -469,6 +482,17 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   void initState() {
     super.initState();
     _loadLeaderboard();
+    _eventSubscription = EventBus().stream.listen((event) {
+      if (event is AnalysisDeletedEvent) {
+        _loadLeaderboard();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadLeaderboard() async {

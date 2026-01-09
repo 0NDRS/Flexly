@@ -43,4 +43,18 @@ class UserService {
       throw Exception('Failed to follow user');
     }
   }
+
+  Future<List<dynamic>> searchUsers(String query) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/search?q=$query'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to search users');
+    }
+  }
 }

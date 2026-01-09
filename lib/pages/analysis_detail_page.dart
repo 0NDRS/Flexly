@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/data/mock_data.dart';
+import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/services/event_bus.dart';
 
 class AnalysisDetailPage extends StatefulWidget {
   final String date;
@@ -11,6 +13,7 @@ class AnalysisDetailPage extends StatefulWidget {
   final String adviceDescription;
   final List<String> imageUrls;
   final bool isMe;
+  final String? analysisId;
 
   const AnalysisDetailPage({
     super.key,
@@ -21,6 +24,7 @@ class AnalysisDetailPage extends StatefulWidget {
     this.adviceDescription = MockData.adviceDescription,
     this.imageUrls = const [],
     this.isMe = true,
+    this.analysisId,
   });
 
   @override
@@ -29,6 +33,50 @@ class AnalysisDetailPage extends StatefulWidget {
 
 class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
   int _currentImageIndex = 0;
+
+  Future<void> _handleDelete() async {
+    if (widget.analysisId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundDark,
+        title: const Text('Delete Analysis?',
+            style: TextStyle(color: AppColors.white)),
+        content: const Text(
+          'Are you sure you want to delete this analysis? This action cannot be undone.',
+          style: TextStyle(color: AppColors.grayLight),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child:
+                const Text('Cancel', style: TextStyle(color: AppColors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await AnalysisService().deleteAnalysis(widget.analysisId!);
+        EventBus().fire(AnalysisDeletedEvent(widget.analysisId!));
+        if (mounted) {
+          Navigator.pop(context, true); // Go back with success signal
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting analysis: $e')),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +109,14 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                           icon: Icons.arrow_back_ios_new_rounded,
                           onTap: () => Navigator.pop(context),
                         ),
-                        // Removed settings button, placeholder for alignment if needed or just empty
-                        const SizedBox(width: 48),
+                        if (widget.isMe && widget.analysisId != null)
+                          _buildCircleButton(
+                            icon: Icons.delete_outline,
+                            color: Colors.red,
+                            onTap: _handleDelete,
+                          )
+                        else
+                          const SizedBox(width: 48),
                       ],
                     ),
                     Column(
@@ -281,7 +335,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
   }
 
   Widget _buildCircleButton(
-      {required IconData icon, required VoidCallback onTap}) {
+      {required IconData icon, required VoidCallback onTap, Color? color}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -294,7 +348,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         ),
         child: Icon(
           icon,
-          color: AppColors.white,
+          color: color ?? AppColors.white,
           size: 20,
         ),
       ),

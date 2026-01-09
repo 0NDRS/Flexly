@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 
-// Define the User Schema
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -11,7 +10,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add an email'],
     unique: true,
-    // Regex for email validation
     match: [
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
       'Please add a valid email',
@@ -20,7 +18,7 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     unique: true,
-    sparse: true, // Allows null/undefined to not conflict
+    sparse: true,
   },
   bio: {
     type: String,
@@ -34,13 +32,13 @@ const userSchema = new mongoose.Schema({
     type: Number,
   },
   height: {
-    type: Number, // in cm
+    type: Number,
   },
   weight: {
-    type: Number, // in kg
+    type: Number,
   },
   goal: {
-    type: String, // e.g., 'gain_muscles', 'loose_fat'
+    type: String,
   },
   followers: {
     type: Number,
@@ -80,7 +78,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a password'],
     minlength: 6,
-    select: false, // Don't return password by default in queries
+    select: false,
   },
   createdAt: {
     type: Date,
@@ -88,9 +86,7 @@ const userSchema = new mongoose.Schema({
   },
 })
 
-// Middleware: Encrypt password using bcrypt before saving
 userSchema.pre('save', async function () {
-  // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
     return
   }
@@ -99,7 +95,6 @@ userSchema.pre('save', async function () {
   this.password = await bcrypt.hash(this.password, salt)
 })
 
-// Method: Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function (enteredPassword: string) {
   return await bcrypt.compare(enteredPassword, this.password)
 }
