@@ -36,10 +36,19 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     // Create new user
+    let username = req.body.username
+    if (!username) {
+      // Generate username from name if not provided
+      const baseName = name.toLowerCase().replace(/\s+/g, '')
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+      username = `${baseName}${randomSuffix}`
+    }
+
     const user = await User.create({
       name,
       email,
       password,
+      username,
     })
 
     if (user) {
@@ -50,6 +59,11 @@ export const registerUser = async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         bio: user.bio,
+        gender: user.gender,
+        age: user.age,
+        height: user.height,
+        weight: user.weight,
+        goal: user.goal,
         profilePicture: user.profilePicture,
         followers: user.followers,
         following: user.following,
@@ -87,6 +101,11 @@ export const loginUser = async (req: Request, res: Response) => {
         email: user.email,
         username: user.username,
         bio: user.bio,
+        gender: user.gender,
+        age: user.age,
+        height: user.height,
+        weight: user.weight,
+        goal: user.goal,
         profilePicture: user.profilePicture,
         followers: user.followers,
         following: user.following,
@@ -132,6 +151,12 @@ export const updateProfile = async (req: Request, res: Response) => {
       if (req.body.username) user.username = req.body.username
       if (req.body.bio) user.bio = req.body.bio
 
+      if (req.body.gender) user.gender = req.body.gender
+      if (req.body.age) user.age = Number(req.body.age)
+      if (req.body.height) user.height = Number(req.body.height)
+      if (req.body.weight) user.weight = Number(req.body.weight)
+      if (req.body.goal) user.goal = req.body.goal
+
       if (req.body.password) {
         user.password = req.body.password
       }
@@ -172,6 +197,11 @@ export const updateProfile = async (req: Request, res: Response) => {
         email: updatedUser.email,
         username: updatedUser.username,
         bio: updatedUser.bio,
+        gender: updatedUser.gender,
+        age: updatedUser.age,
+        height: updatedUser.height,
+        weight: updatedUser.weight,
+        goal: updatedUser.goal,
         profilePicture: updatedUser.profilePicture,
         followers: updatedUser.followers,
         following: updatedUser.following,

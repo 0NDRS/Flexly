@@ -3,6 +3,7 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/home.dart';
 import 'package:flexly/widgets/primary_button.dart';
+import 'package:flexly/services/auth_service.dart';
 
 class SelectPlanPage extends StatefulWidget {
   const SelectPlanPage({super.key});
@@ -13,6 +14,8 @@ class SelectPlanPage extends StatefulWidget {
 
 class _SelectPlanPageState extends State<SelectPlanPage> {
   String? selectedGoal;
+  final _authService = AuthService();
+  bool _isLoading = false;
 
   final List<GoalOption> goals = [
     GoalOption(
@@ -156,8 +159,8 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                   SizedBox(
                     width: double.infinity,
                     child: PrimaryButton(
-                      text: 'Finish',
-                      onPressed: _handleFinish,
+                      text: _isLoading ? 'Saving...' : 'Finish',
+                      onPressed: _isLoading ? null : _handleFinish,
                       size: ButtonSize.large,
                     ),
                   ),
@@ -289,11 +292,44 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
     );
   }
 
-  void _handleFinish() {
-    // TODO: Save selected goal to backend
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+  void _handleFinish() async {
+    if (selectedGoal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a goal')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final updates = {
+      'goal': selectedGoal!,
+    };
+
+    final result = await _authService.updateProfile(updates);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to update goal'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleSkip() {

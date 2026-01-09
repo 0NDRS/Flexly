@@ -151,10 +151,10 @@ class AnalysisCard extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: _buildStatItem(
-              icon: Icons.fitness_center,
+              icon: Icons.analytics_outlined,
               iconColor: AppColors.waterBlue,
               iconBgColor: AppColors.waterBackground,
-              label: 'Tracked',
+              label: 'Analyses',
               value: '$tracked',
             ),
           ),

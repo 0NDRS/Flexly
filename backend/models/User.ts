@@ -26,6 +26,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other'],
+  },
+  age: {
+    type: Number,
+  },
+  height: {
+    type: Number, // in cm
+  },
+  weight: {
+    type: Number, // in kg
+  },
+  goal: {
+    type: String, // e.g., 'gain_muscles', 'loose_fat'
+  },
   followers: {
     type: Number,
     default: 0,

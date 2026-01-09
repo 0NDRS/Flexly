@@ -94,32 +94,48 @@ class AuthService {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No token found'};
 
-      final uri = Uri.parse('$baseUrl/profile');
-      final request = http.MultipartRequest('PUT', uri)
-        ..headers['Authorization'] = 'Bearer $token';
+      dynamic responseData;
+      int statusCode;
 
-      // Add text fields
-      updates.forEach((key, value) {
-        request.fields[key] = value;
-      });
+      if (profilePicture == null) {
+        // Use JSON request if no file to upload
+        final response = await http.put(
+          Uri.parse('$baseUrl/profile'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(updates),
+        );
+        statusCode = response.statusCode;
+        responseData = jsonDecode(response.body);
+      } else {
+        // Use Multipart request if file exists
+        final uri = Uri.parse('$baseUrl/profile');
+        final request = http.MultipartRequest('PUT', uri)
+          ..headers['Authorization'] = 'Bearer $token';
 
-      // Add file if present
-      if (profilePicture != null) {
+        // Add text fields
+        updates.forEach((key, value) {
+          request.fields[key] = value;
+        });
+
         request.files.add(await http.MultipartFile.fromPath(
           'profilePicture',
           profilePicture.path,
         ));
+
+        final streamedResponse = await request.send();
+        final response = await http.Response.fromStream(streamedResponse);
+        statusCode = response.statusCode;
+        responseData = jsonDecode(response.body);
       }
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        await _saveUser(data);
-        return {'success': true, 'data': data};
+      if (statusCode == 200) {
+        await _saveUser(responseData);
+        return {'success': true, 'data': responseData};
       } else {
-        return {'success': false, 'message': data['message']};
+        return {'success': false, 'message': responseData['message']};
       }
     } catch (e) {
       return {'success': false, 'message': e.toString()};

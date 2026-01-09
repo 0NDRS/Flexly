@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/body_info_page.dart';
+import 'package:flexly/pages/home.dart';
+import 'package:flexly/pages/select_plan_page.dart'; // Import SelectPlanPage
 import 'package:flexly/pages/register_page.dart';
 import 'package:flexly/services/auth_service.dart';
 
@@ -45,9 +47,27 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const BodyInfoPage()),
-        );
+        final userData = result['data'];
+        final hasBodyInfo = userData['gender'] != null &&
+            userData['age'] != null &&
+            userData['height'] != null &&
+            userData['weight'] != null;
+
+        if (hasBodyInfo) {
+          if (userData['goal'] != null) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const SelectPlanPage()),
+            );
+          }
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const BodyInfoPage()),
+          );
+        }
       }
     } else {
       if (mounted) {
@@ -75,10 +95,13 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -197,7 +220,8 @@ class _LoginPageState extends State<LoginPage> {
                         elevation: 0,
                       ),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: AppColors.white)
+                          ? const CircularProgressIndicator(
+                              color: AppColors.white)
                           : Text(
                               'Sign in',
                               style: AppTextStyles.h2.copyWith(

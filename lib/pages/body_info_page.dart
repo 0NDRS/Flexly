@@ -4,6 +4,7 @@ import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/home.dart';
 import 'package:flexly/pages/select_plan_page.dart';
 import 'package:flexly/widgets/primary_button.dart';
+import 'package:flexly/services/auth_service.dart';
 
 class BodyInfoPage extends StatefulWidget {
   const BodyInfoPage({super.key});
@@ -13,11 +14,16 @@ class BodyInfoPage extends StatefulWidget {
 }
 
 class _BodyInfoPageState extends State<BodyInfoPage> {
+  final _authService = AuthService();
+  bool _isLoading = false;
   String? selectedGender;
-  final TextEditingController _ageController = TextEditingController(text: '18');
-  final TextEditingController _heightController = TextEditingController(text: '180');
-  final TextEditingController _weightController = TextEditingController(text: '70');
-  
+  final TextEditingController _ageController =
+      TextEditingController(text: '18');
+  final TextEditingController _heightController =
+      TextEditingController(text: '180');
+  final TextEditingController _weightController =
+      TextEditingController(text: '70');
+
   final FocusNode _ageFocusNode = FocusNode();
   final FocusNode _heightFocusNode = FocusNode();
   final FocusNode _weightFocusNode = FocusNode();
@@ -141,8 +147,8 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                       SizedBox(
                         width: double.infinity,
                         child: PrimaryButton(
-                          text: 'Continue',
-                          onPressed: _handleContinue,
+                          text: _isLoading ? 'Saving...' : 'Continue',
+                          onPressed: _isLoading ? () {} : _handleContinue,
                           size: ButtonSize.large,
                         ),
                       ),
@@ -269,7 +275,8 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                 focusNode: focusNode,
                 controller: controller,
                 textAlign: TextAlign.right,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 style: AppTextStyles.body1.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.w600,
@@ -354,11 +361,47 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
     );
   }
 
-  void _handleContinue() {
-    // TODO: Save body info to backend
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SelectPlanPage()),
-    );
+  Future<void> _handleContinue() async {
+    if (selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your gender')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final updates = {
+      'gender': selectedGender!,
+      'age': _ageController.text,
+      'height': _heightController.text,
+      'weight': _weightController.text,
+    };
+
+    final result = await _authService.updateProfile(updates);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const SelectPlanPage()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to update info'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleSkip() {

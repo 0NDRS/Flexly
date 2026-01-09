@@ -79,14 +79,14 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 16),
                 // Profile Header
                 HomeHeader(userData: _userData),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // Profile Image Section
                 Container(
@@ -166,6 +166,22 @@ class _ProfilePageState extends State<ProfilePage> {
                               'Score', '${_userData?['score'] ?? 0}'),
                         ],
                       ),
+                      const SizedBox(height: 24),
+                      Divider(
+                          color: AppColors.grayLight.withValues(alpha: 0.2)),
+                      const SizedBox(height: 16),
+                      // Body Stats
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildStatColumn(
+                              'Age', '${_userData?['age'] ?? '-'}'),
+                          _buildStatColumn(
+                              'Height', '${_userData?['height'] ?? '-'} cm'),
+                          _buildStatColumn(
+                              'Weight', '${_userData?['weight'] ?? '-'} kg'),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -177,20 +193,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     Expanded(
                       child: _buildSmallCard(
                         icon: Icons.local_fire_department,
-                        label: 'Current Streak',
+                        label: 'Streak',
                         // Calculate streak from analyses (fallback to user data if needed, but calculate is better if user data is stuck at 0)
                         value:
                             '${AnalysisService.calculateStreak(_analyses)} days',
-                        iconColor: AppColors.primary,
+                        iconColor: AppColors.fireOrange,
+                        iconBgColor: AppColors.fireBackground,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildSmallCard(
                         icon: Icons.analytics_outlined,
-                        label: 'Analytics Tracked',
+                        label: 'Analyses',
                         value: '${_analyses.length}',
-                        iconColor: Colors.blue,
+                        iconColor: AppColors.waterBlue,
+                        iconBgColor: AppColors.waterBackground,
                       ),
                     ),
                   ],
@@ -438,6 +456,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required String value,
     required Color iconColor,
+    required Color iconBgColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -451,7 +470,7 @@ class _ProfilePageState extends State<ProfilePage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.gray,
+              color: iconBgColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(

@@ -66,8 +66,7 @@ export const analyzePhysique = async (req: Request, res: Response) => {
     const imageParts = processedFiles.map((f) => f.geminiPart)
     const imageUrls = processedFiles.map((f) => f.cloudinaryUrl)
 
-    // Use gemini-2.0-flash as requested
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
 
     const prompt = `
       You are an elite bodybuilding and physique coach with a critical eye for detail. 
@@ -136,6 +135,11 @@ export const analyzePhysique = async (req: Request, res: Response) => {
           )
         : 0 // Fallback if nothing is visible
 
+    // If overall is 0 (i.e., nothing was visible), we perhaps shouldn't save a broken analysis?
+    // User requested: "if some of the results is 0 it shouldn't be counted"
+    // But we still save it so they see the advice "Couldn't see legs etc".
+    // However, for the USER STATS (Score), we probably shouldn't add 0.
+
     // 5. Save to Database
     // Use the authenticated user from the token
     const userId = (req as any).user?._id
@@ -159,7 +163,11 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       userToUpdate.analyticsTracked = (userToUpdate.analyticsTracked || 0) + 1
 
       // 2. Score (Add overall rating * 10)
-      userToUpdate.score = (userToUpdate.score || 0) + Math.round(overall * 10)
+      // Only add to score if the analysis was valid (overall > 0)
+      if (overall > 0) {
+        userToUpdate.score =
+          (userToUpdate.score || 0) + Math.round(overall * 10)
+      }
 
       // 3. Streak Logic
       // Find the last analysis *before* this new one

@@ -36,7 +36,8 @@ class _HomePageState extends State<HomePage> {
       HomeContent(onTabChange: _onTabChange),
       const TrainingPage(),
       const AnalysisPage(),
-      const StatisticsPage(),
+      // Reload StatisticsPage every time it's opened to refresh data
+      _currentIndex == 3 ? const StatisticsPage() : const SizedBox(),
       const ProfilePage(),
     ];
 

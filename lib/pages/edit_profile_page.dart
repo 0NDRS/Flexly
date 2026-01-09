@@ -22,8 +22,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
   late TextEditingController _emailController;
+  late TextEditingController _ageController;
+  late TextEditingController _heightController;
+  late TextEditingController _weightController;
+  String? _gender;
   File? _profileImage;
   bool _isLoading = false;
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -35,6 +40,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _bioController = TextEditingController(text: widget.userData['bio'] ?? '');
     _emailController =
         TextEditingController(text: widget.userData['email'] ?? '');
+    _ageController =
+        TextEditingController(text: widget.userData['age']?.toString() ?? '');
+    _heightController = TextEditingController(
+        text: widget.userData['height']?.toString() ?? '');
+    _weightController = TextEditingController(
+        text: widget.userData['weight']?.toString() ?? '');
+    _gender = widget.userData['gender'];
+
+    _nameController.addListener(_checkForChanges);
+    _usernameController.addListener(_checkForChanges);
+    _bioController.addListener(_checkForChanges);
+    _emailController.addListener(_checkForChanges);
+    _ageController.addListener(_checkForChanges);
+    _heightController.addListener(_checkForChanges);
+    _weightController.addListener(_checkForChanges);
   }
 
   @override
@@ -43,7 +63,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _usernameController.dispose();
     _bioController.dispose();
     _emailController.dispose();
+    _ageController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
     super.dispose();
+  }
+
+  void _checkForChanges() {
+    final nameChanged = _nameController.text != (widget.userData['name'] ?? '');
+    final usernameChanged =
+        _usernameController.text != (widget.userData['username'] ?? '');
+    final bioChanged = _bioController.text != (widget.userData['bio'] ?? '');
+    final emailChanged =
+        _emailController.text != (widget.userData['email'] ?? '');
+    final ageChanged =
+        _ageController.text != (widget.userData['age']?.toString() ?? '');
+    final heightChanged =
+        _heightController.text != (widget.userData['height']?.toString() ?? '');
+    final weightChanged =
+        _weightController.text != (widget.userData['weight']?.toString() ?? '');
+    final genderChanged = _gender != widget.userData['gender'];
+    final imageChanged = _profileImage != null;
+
+    final hasChanges = nameChanged ||
+        usernameChanged ||
+        bioChanged ||
+        emailChanged ||
+        ageChanged ||
+        heightChanged ||
+        weightChanged ||
+        genderChanged ||
+        imageChanged;
+
+    if (hasChanges != _hasChanges) {
+      if (mounted) {
+        setState(() {
+          _hasChanges = hasChanges;
+        });
+      }
+    }
   }
 
   Future<void> _pickImage() async {
@@ -53,6 +111,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (pickedFile != null) {
       setState(() {
         _profileImage = File(pickedFile.path);
+        _checkForChanges();
       });
     }
   }
@@ -69,6 +128,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       'username': _usernameController.text,
       'bio': _bioController.text,
       'email': _emailController.text,
+      'age': _ageController.text,
+      'height': _heightController.text,
+      'weight': _weightController.text,
+      'gender': _gender ?? '',
     };
 
     final result = await _authService.updateProfile(updates,
@@ -151,10 +214,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 16),
               _buildTextField('Email', _emailController,
                   keyboardType: TextInputType.emailAddress),
+              const SizedBox(height: 16),
+              // Gender Dropdown
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gender',
+                    style: AppTextStyles.body2
+                        .copyWith(color: AppColors.grayLight),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: _gender,
+                    dropdownColor: AppColors.grayDark,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: AppColors.grayDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    items: ['Male', 'Female', 'Other']
+                        .map((label) => DropdownMenuItem(
+                              value: label,
+                              child: Text(label),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _gender = value;
+                        _checkForChanges();
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Stats Row (Age, Height, Weight)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField('Age', _ageController,
+                        keyboardType: TextInputType.number),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField('Height (cm)', _heightController,
+                        keyboardType: TextInputType.number),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField('Weight (kg)', _weightController,
+                        keyboardType: TextInputType.number),
+                  ),
+                ],
+              ),
               const SizedBox(height: 32),
               PrimaryButton(
                 text: _isLoading ? 'Saving...' : 'Save Changes',
-                onPressed: _isLoading ? () {} : _saveProfile,
+                onPressed: (_hasChanges && !_isLoading) ? _saveProfile : null,
               ),
             ],
           ),

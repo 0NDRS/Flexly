@@ -6,7 +6,7 @@ enum ButtonSize { small, large }
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final ButtonSize size;
   final IconData? icon;
 

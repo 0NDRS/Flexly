@@ -116,13 +116,13 @@ class _HomeContentState extends State<HomeContent> {
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
                 const HomeHeader(),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 SectionHeader(
                   title: 'Analysis',
                   actionText: 'View All',
@@ -167,6 +167,7 @@ class _HomeContentState extends State<HomeContent> {
                             onPressed: () => _handleUpload(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -194,7 +195,13 @@ class _HomeContentState extends State<HomeContent> {
                 const SizedBox(height: 16),
                 TrainingTipCard(
                   latestAnalysis: _latestAnalysis,
-                  onTap: () => _navigateToDetails(context),
+                  onTap: () {
+                    if (_latestAnalysis == null) {
+                      _handleUpload(context);
+                    } else {
+                      _navigateToDetails(context);
+                    }
+                  },
                 ),
                 const SizedBox(height: 48),
               ],
