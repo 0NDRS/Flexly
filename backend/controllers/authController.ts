@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import User from '../models/User'
+import Analysis from '../models/Analysis'
 import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
 
@@ -130,6 +131,86 @@ export const loginUser = async (req: Request, res: Response) => {
 export const getMe = async (req: Request, res: Response) => {
   try {
     const user = await User.findById((req as any).user.id)
+
+    // Self-healing: Recalculate stats if score is 0 OR score > 10 (legacy) or muscleStats missing
+    // We assume max average score is 10. If it's higher, it's a legacy sum.
+    if (
+      user &&
+      (!user.score || user.score === 0 || user.score > 10 || !user.muscleStats)
+    ) {
+      const analyses = await Analysis.find({ user: user._id })
+      if (analyses.length > 0) {
+        // 1. Calculate Score
+        const validAnalyses = analyses.filter(
+          (a: any) => a.ratings?.overall > 0
+        )
+        if (validAnalyses.length > 0) {
+          const totalOverall = validAnalyses.reduce(
+            (sum: number, a: any) => sum + a.ratings.overall,
+            0
+          )
+          user.score = parseFloat(
+            (totalOverall / validAnalyses.length).toFixed(1)
+          )
+        } else {
+          user.score = 0
+        }
+
+        // 2. Calculate Muscle Stats
+        const muscleSums: any = {
+          arms: 0,
+          chest: 0,
+          abs: 0,
+          shoulders: 0,
+          legs: 0,
+          back: 0,
+        }
+        const muscleCounts: any = {
+          arms: 0,
+          chest: 0,
+          abs: 0,
+          shoulders: 0,
+          legs: 0,
+          back: 0,
+        }
+
+        analyses.forEach((a: any) => {
+          const r = a.ratings || {}
+          Object.keys(muscleSums).forEach((key) => {
+            if (r[key] && r[key] > 0) {
+              muscleSums[key] += r[key]
+              muscleCounts[key]++
+            }
+          })
+        })
+
+        const muscleAverages: any = {}
+        Object.keys(muscleSums).forEach((key) => {
+          muscleAverages[key] =
+            muscleCounts[key] > 0
+              ? parseFloat((muscleSums[key] / muscleCounts[key]).toFixed(1))
+              : 0
+        })
+        user.muscleStats = muscleAverages
+
+        await user.save()
+      } else {
+        // If data is weird but no analyses, just reset to 0
+        if (user.score > 10) {
+          user.score = 0
+          user.muscleStats = {
+            arms: 0,
+            chest: 0,
+            abs: 0,
+            shoulders: 0,
+            legs: 0,
+            back: 0,
+          }
+          await user.save()
+        }
+      }
+    }
+
     res.status(200).json(user)
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })

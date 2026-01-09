@@ -162,12 +162,66 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       // 1. Analytics Tracked
       userToUpdate.analyticsTracked = (userToUpdate.analyticsTracked || 0) + 1
 
-      // 2. Score (Add overall rating * 10)
-      // Only add to score if the analysis was valid (overall > 0)
-      if (overall > 0) {
-        userToUpdate.score =
-          (userToUpdate.score || 0) + Math.round(overall * 10)
+      // Fetch all analyses to calculate accurate averages for leaderboard
+      const allAnalyses = await Analysis.find({ user: userId })
+
+      // 2. Score (Now = Average Overall Rating)
+      // We calculate it from all analyses to be accurate
+      const validAnalyses = allAnalyses.filter(
+        (a: any) => a.ratings.overall > 0
+      )
+      if (validAnalyses.length > 0) {
+        const totalOverall = validAnalyses.reduce(
+          (sum: number, a: any) => sum + a.ratings.overall,
+          0
+        )
+        // Store as float with 1 decimal precision, or just float.
+        // User model `score` is Number, so it handles floats.
+        userToUpdate.score = parseFloat(
+          (totalOverall / validAnalyses.length).toFixed(1)
+        )
+      } else {
+        userToUpdate.score = 0
       }
+
+      // 2.5 Recalculate Muscle Averages
+      const muscleSums: any = {
+        arms: 0,
+        chest: 0,
+        abs: 0,
+        shoulders: 0,
+        legs: 0,
+        back: 0,
+      }
+      const muscleCounts: any = {
+        arms: 0,
+        chest: 0,
+        abs: 0,
+        shoulders: 0,
+        legs: 0,
+        back: 0,
+      }
+
+      allAnalyses.forEach((a: any) => {
+        const r = a.ratings
+        // Iterate keys
+        Object.keys(muscleSums).forEach((key) => {
+          if (r[key] && r[key] > 0) {
+            muscleSums[key] += r[key]
+            muscleCounts[key]++
+          }
+        })
+      })
+
+      const muscleAverages: any = {}
+      Object.keys(muscleSums).forEach((key) => {
+        muscleAverages[key] =
+          muscleCounts[key] > 0
+            ? parseFloat((muscleSums[key] / muscleCounts[key]).toFixed(2))
+            : 0
+      })
+
+      userToUpdate.muscleStats = muscleAverages
 
       // 3. Streak Logic
       // Find the last analysis *before* this new one
@@ -224,6 +278,21 @@ export const getAnalyses = async (req: Request, res: Response) => {
       return
     }
 
+    const analyses = await Analysis.find({ user: userId }).sort({
+      createdAt: -1,
+    })
+    res.json(analyses)
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+// @desc    Get analyses by user ID
+// @route   GET /api/analysis/user/:userId
+// @access  Private
+export const getAnalysesByUserId = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId
     const analyses = await Analysis.find({ user: userId }).sort({
       createdAt: -1,
     })

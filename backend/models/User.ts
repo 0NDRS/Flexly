@@ -50,6 +50,8 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  followersList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  followingList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   score: {
     type: Number,
     default: 0,
@@ -61,6 +63,14 @@ const userSchema = new mongoose.Schema({
   analyticsTracked: {
     type: Number,
     default: 0,
+  },
+  muscleStats: {
+    arms: { type: Number, default: 0 },
+    chest: { type: Number, default: 0 },
+    abs: { type: Number, default: 0 },
+    shoulders: { type: Number, default: 0 },
+    legs: { type: Number, default: 0 },
+    back: { type: Number, default: 0 },
   },
   profilePicture: {
     type: String,

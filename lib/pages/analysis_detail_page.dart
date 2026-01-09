@@ -10,6 +10,7 @@ class AnalysisDetailPage extends StatefulWidget {
   final String adviceTitle;
   final String adviceDescription;
   final List<String> imageUrls;
+  final bool isMe;
 
   const AnalysisDetailPage({
     super.key,
@@ -19,6 +20,7 @@ class AnalysisDetailPage extends StatefulWidget {
     this.adviceTitle = MockData.adviceTitle,
     this.adviceDescription = MockData.adviceDescription,
     this.imageUrls = const [],
+    this.isMe = true,
   });
 
   @override
@@ -30,6 +32,14 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Dynamically prepare stats
+    final statsEntries = widget.bodyPartRatings.entries.toList();
+    // Sort if needed, or rely on map order.
+    // Split into two columns
+    final mid = (statsEntries.length / 2).ceil();
+    final leftStats = statsEntries.take(mid).toList();
+    final rightStats = statsEntries.skip(mid).toList();
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
@@ -41,20 +51,54 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
               children: [
                 const SizedBox(height: 16),
                 // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Stack(
+                  alignment: Alignment.center,
                   children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back_ios_new_rounded,
-                      onTap: () => Navigator.pop(context),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back_ios_new_rounded,
+                          onTap: () => Navigator.pop(context),
+                        ),
+                        // Removed settings button, placeholder for alignment if needed or just empty
+                        const SizedBox(width: 48),
+                      ],
                     ),
-                    Text(
-                      widget.date,
-                      style: AppTextStyles.h2.copyWith(color: AppColors.white),
-                    ),
-                    _buildCircleButton(
-                      icon: Icons.settings_outlined,
-                      onTap: () {},
+                    Column(
+                      children: [
+                        Text(
+                          widget.date,
+                          style:
+                              AppTextStyles.h2.copyWith(color: AppColors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: widget.isMe
+                                ? AppColors.primary.withValues(alpha: 0.2)
+                                : AppColors.grayLight.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                                color: widget.isMe
+                                    ? AppColors.primary
+                                    : AppColors.grayLight,
+                                width: 0.5),
+                          ),
+                          child: Text(
+                            widget.isMe ? 'My Post' : "Other's Post",
+                            style: AppTextStyles.small.copyWith(
+                              color: widget.isMe
+                                  ? AppColors.primary
+                                  : AppColors.grayLight,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -159,42 +203,41 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                     border: Border.all(color: AppColors.gray, width: 1),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Column(
-                          children: [
-                            _buildStatRow(
-                                'Arms', widget.bodyPartRatings['Arms'] ?? 0),
-                            const SizedBox(height: 24),
-                            _buildStatRow(
-                                'Abs', widget.bodyPartRatings['Abs'] ?? 0),
-                            const SizedBox(height: 24),
-                            _buildStatRow(
-                                'Legs', widget.bodyPartRatings['Legs'] ?? 0),
-                          ],
+                          children: leftStats
+                              .map((e) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 24),
+                                    child: _buildStatRow(
+                                        _capitalize(e.key), e.value),
+                                  ))
+                              .toList(),
                         ),
                       ),
                       const SizedBox(width: 24),
-                      Container(
-                        width: 1,
-                        height: 100,
-                        color: AppColors.gray,
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildStatRow(
-                                'Chest', widget.bodyPartRatings['Chest'] ?? 0),
-                            const SizedBox(height: 24),
-                            _buildStatRow('Shoulders',
-                                widget.bodyPartRatings['Shoulders'] ?? 0),
-                            const SizedBox(height: 24),
-                            _buildStatRow(
-                                'Back', widget.bodyPartRatings['Back'] ?? 0),
-                          ],
+                      if (rightStats.isNotEmpty) ...[
+                        Container(
+                          width: 1,
+                          height: (rightStats.length * 40)
+                              .toDouble(), // Approximate height
+                          color: AppColors.gray,
                         ),
-                      ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: Column(
+                            children: rightStats
+                                .map((e) => Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 24),
+                                      child: _buildStatRow(
+                                          _capitalize(e.key), e.value),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -288,5 +331,10 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         ),
       ],
     );
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 }

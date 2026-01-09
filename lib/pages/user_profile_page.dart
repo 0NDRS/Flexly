@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/services/auth_service.dart';
+import 'package:flexly/services/user_service.dart';
 import 'package:flexly/services/analysis_service.dart';
-import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:intl/intl.dart';
-import 'package:flexly/widgets/home/home_header.dart';
-import 'package:flexly/pages/settings_page.dart';
-import 'package:flexly/pages/edit_profile_page.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class UserProfilePage extends StatefulWidget {
+  final String userId;
+
+  const UserProfilePage({super.key, required this.userId});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  final _authService = AuthService();
+class _UserProfilePageState extends State<UserProfilePage> {
+  final _userService = UserService();
   final _analysisService = AnalysisService();
   Map<String, dynamic>? _userData;
   List<dynamic> _analyses = [];
   bool _isLoading = true;
+  bool _isFollowing = false;
+  bool _isFollowLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadData();
   }
 
-  Future<void> _loadUserData() async {
-    final user = await _authService.getProfile();
+  Future<void> _loadData() async {
     try {
-      final analyses = await _analysisService.getAnalyses();
+      // Fetch User Profile
+      final user = await _userService.getUserProfile(widget.userId);
+      // Fetch User Analyses
+      final analyses =
+          await _analysisService.getAnalysesByUserId(widget.userId);
+
       if (mounted) {
         setState(() {
           _userData = user;
           _analyses = analyses;
+          _isFollowing = user['isFollowing'] ?? false;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _userData = user;
-          // _analyses remains empty or error handled
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load analysis history: ${e.toString()}'),
+            content: Text('Failed to load profile: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -58,13 +61,30 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _handleLogout() async {
-    await _authService.logout();
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-        (route) => false,
-      );
+  Future<void> _toggleFollow() async {
+    if (_isFollowLoading) return;
+    setState(() => _isFollowLoading = true);
+    try {
+      final newStatus = await _userService.followUser(widget.userId);
+      if (mounted) {
+        setState(() {
+          _isFollowing = newStatus;
+          _isFollowLoading = false;
+          // Update followers count locally for immediate feedback
+          if (_userData != null) {
+            int currentFollowers = _userData!['followers'] ?? 0;
+            _userData!['followers'] =
+                newStatus ? currentFollowers + 1 : currentFollowers - 1;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isFollowLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Action failed: $e')),
+        );
+      }
     }
   }
 
@@ -88,11 +108,27 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: const BackButton(color: AppColors.white),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const BackButton(color: AppColors.white),
+        title:
+            Text(_userData?['username'] ?? 'Profile', style: AppTextStyles.h3),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -101,11 +137,8 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
-                // Profile Header
-                HomeHeader(userData: _userData),
-                const SizedBox(height: 24),
 
-                // Profile Image Section
+                // Profile Card
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -114,15 +147,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Column(
                     children: [
-                      // Large Profile Image with red border
+                      // Profile Image
                       Container(
-                        width: 180,
-                        height: 180,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: AppColors.primary,
-                            width: 5,
+                            width: 3,
                           ),
                           color: AppColors.grayLight,
                           image: _userData?['profilePicture'] != null &&
@@ -137,13 +170,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: _userData?['profilePicture'] == null ||
                                 _userData!['profilePicture'] == ''
                             ? const Icon(Icons.person,
-                                size: 80, color: Colors.white)
+                                size: 60, color: Colors.white)
                             : null,
                       ),
-                      const SizedBox(height: 24),
-                      // Nick name
+                      const SizedBox(height: 16),
+                      // Name
                       Text(
-                        _userData?['name'] ?? 'Nick name',
+                        _userData?['name'] ?? 'User',
                         style: AppTextStyles.h3.copyWith(
                           color: AppColors.white,
                           fontSize: 20,
@@ -160,6 +193,36 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontSize: 13,
                         ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Follow Button
+                      SizedBox(
+                        width: 140,
+                        height: 40,
+                        child: ElevatedButton(
+                          onPressed: _toggleFollow,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isFollowing
+                                ? AppColors.gray
+                                : AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: _isFollowLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2))
+                              : Text(
+                                  _isFollowing ? 'Following' : 'Follow',
+                                  style: AppTextStyles.button2
+                                      .copyWith(color: Colors.white),
+                                ),
+                        ),
+                      ),
+
                       const SizedBox(height: 24),
                       // Stats row
                       Row(
@@ -170,22 +233,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           Container(
                             width: 1,
                             height: 40,
-                            color: AppColors.grayDark,
+                            color: AppColors.grayLight.withOpacity(0.2),
                           ),
                           _buildStatColumn(
                               'Following', '${_userData?['following'] ?? 0}'),
                           Container(
                             width: 1,
                             height: 40,
-                            color: AppColors.grayDark,
+                            color: AppColors.grayLight.withOpacity(0.2),
                           ),
                           _buildStatColumn(
-                              'Avg. Score', '${_calculateAverageScore()}'),
+                              'Avg. Rating', '${_calculateAverageScore()}'),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      Divider(
-                          color: AppColors.grayLight.withValues(alpha: 0.2)),
+                      Divider(color: AppColors.grayLight.withOpacity(0.2)),
                       const SizedBox(height: 16),
                       // Body Stats
                       Row(
@@ -213,7 +275,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildSmallCard(
                         icon: Icons.local_fire_department,
                         label: 'Streak',
-                        // Calculate streak from analyses (fallback to user data if needed, but calculate is better if user data is stuck at 0)
                         value:
                             '${AnalysisService.calculateStreak(_analyses)} days',
                         iconColor: AppColors.fireOrange,
@@ -300,17 +361,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => AnalysisDetailPage(
-                                      date: DateFormat.yMMMd().format(
+                                      date: DateFormat('dd.MM.yyyy').format(
                                           DateTime.parse(
                                               analysis['createdAt'])),
                                       overallRating: overall,
                                       bodyPartRatings: bodyParts,
-                                      adviceTitle: analysis['adviceTitle'] ??
-                                          'Analysis Result',
+                                      adviceTitle:
+                                          analysis['adviceTitle'] ?? 'Analysis',
                                       adviceDescription:
                                           analysis['advice'] ?? '',
                                       imageUrls: imageUrls,
-                                      isMe: true,
+                                      isMe: false,
                                     ),
                                   ),
                                 );
@@ -365,79 +426,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           },
                         ),
                       ),
-                const SizedBox(height: 32),
-                // Edit Profile and Settings buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Edit profile',
-                        Icons.edit_outlined,
-                        () async {
-                          if (_userData != null) {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EditProfilePage(userData: _userData!),
-                              ),
-                            );
-                            if (result == true) {
-                              _loadUserData();
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Settings',
-                        Icons.settings_outlined,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Logout Button
-                OutlinedButton(
-                  onPressed: _handleLogout,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.grayDark,
-                    side: const BorderSide(color: Colors.red, width: 1.5),
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.logout,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Log out',
-                        style: AppTextStyles.body2.copyWith(
-                          color: Colors.red,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -446,61 +435,15 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildOutlineButton(
-    String label,
-    IconData icon,
-    VoidCallback onPressed,
-  ) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: AppColors.grayDark,
-        side: const BorderSide(color: AppColors.grayLight, width: 1.5),
-        padding: const EdgeInsets.symmetric(vertical: 28),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: AppColors.white,
-            size: 18,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: AppTextStyles.body2.copyWith(
-              color: AppColors.white,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStatColumn(String label, String value) {
     return Column(
       children: [
-        Text(
-          label,
-          style: AppTextStyles.body2.copyWith(
-            color: AppColors.grayLight,
-            fontSize: 11,
-          ),
-        ),
+        Text(value,
+            style: AppTextStyles.h3
+                .copyWith(color: AppColors.white, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTextStyles.h3.copyWith(
-            color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text(label,
+            style: AppTextStyles.small.copyWith(color: AppColors.grayLight)),
       ],
     );
   }
@@ -513,50 +456,29 @@ class _ProfilePageState extends State<ProfilePage> {
     required Color iconBgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.grayDark,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.gray),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: iconBgColor,
-              borderRadius: BorderRadius.circular(8),
+              shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.grayLight,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: AppTextStyles.h3.copyWith(
-                    color: AppColors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 12),
+          Text(value,
+              style: AppTextStyles.h3.copyWith(
+                  color: AppColors.white, fontWeight: FontWeight.bold)),
+          Text(label,
+              style: AppTextStyles.small.copyWith(color: AppColors.grayLight)),
         ],
       ),
     );

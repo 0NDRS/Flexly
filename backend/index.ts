@@ -9,6 +9,7 @@ import connectDB from './config/db'
 import configureCloudinary from './config/cloudinary'
 import authRoutes from './routes/authRoutes'
 import analysisRoutes from './routes/analysisRoutes'
+import userRoutes from './routes/userRoutes'
 
 // Connect to MongoDB
 connectDB()
@@ -30,6 +31,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/analysis', analysisRoutes)
+app.use('/api/users', userRoutes)
 
 // Error Handler
 app.use((err: any, req: Request, res: Response, next: any) => {

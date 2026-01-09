@@ -4,6 +4,11 @@ import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flexly/services/leaderboard_service.dart';
+import 'package:flexly/pages/home.dart';
+import 'package:flexly/pages/user_profile_page.dart';
+
+import 'package:flexly/pages/home.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -426,29 +431,329 @@ class _StatisticsTabState extends State<StatisticsTab> {
   }
 }
 
-class LeaderboardTab extends StatelessWidget {
+class LeaderboardTab extends StatefulWidget {
   const LeaderboardTab({super.key});
 
   @override
+  State<LeaderboardTab> createState() => _LeaderboardTabState();
+}
+
+class _LeaderboardTabState extends State<LeaderboardTab>
+    with AutomaticKeepAliveClientMixin {
+  final _leaderboardService = LeaderboardService();
+  bool _isLoading = true;
+  List<dynamic> _users = [];
+  Map<String, dynamic>? _myRankData;
+
+  // Filters
+  String _selectedCategory = 'Overall';
+  String _selectedGender = 'All';
+  String _selectedWeight = 'All';
+
+  final List<String> _categories = [
+    'Overall',
+    'Arms',
+    'Chest',
+    'Abs',
+    'Shoulders',
+    'Legs',
+    'Back'
+  ];
+  final List<String> _genders = ['All', 'Male', 'Female'];
+  final List<String> _weights = ['All', '< 70kg', '70-85kg', '> 85kg'];
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLeaderboard();
+  }
+
+  Future<void> _loadLeaderboard() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _leaderboardService.getLeaderboard(
+        category: _selectedCategory,
+        gender: _selectedGender,
+        weightClass: _selectedWeight,
+      );
+      if (mounted) {
+        setState(() {
+          _users = data['leaderboard'] ?? [];
+          _myRankData = data['myRank']; // Can be null if not ranked/found
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // show error
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.leaderboard,
-              size: 64, color: AppColors.grayLight.withValues(alpha: 0.5)),
-          const SizedBox(height: 16),
-          Text(
-            'Leaderboard Coming Soon',
-            style: AppTextStyles.h3.copyWith(color: AppColors.grayLight),
+    super.build(context);
+    return Column(
+      children: [
+        // Filters
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              _buildFilterChip('Sort', _categories, _selectedCategory,
+                  (val) => _selectedCategory = val),
+              const SizedBox(width: 12),
+              _buildFilterChip('Gender', _genders, _selectedGender,
+                  (val) => _selectedGender = val),
+              const SizedBox(width: 12),
+              _buildFilterChip('Weight', _weights, _selectedWeight,
+                  (val) => _selectedWeight = val),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Compete with others based on your\nanalysis score and streaks!',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
-          ),
-        ],
+        ),
+
+        // List
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadLeaderboard,
+                  color: AppColors.primary,
+                  backgroundColor: AppColors.grayDark,
+                  child: _users.isEmpty
+                      ? Center(
+                          child: Text('No users found',
+                              style: AppTextStyles.body1
+                                  .copyWith(color: AppColors.grayLight)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.only(
+                              left: 20, right: 20, top: 0, bottom: 100),
+                          itemCount: _users.length,
+                          itemBuilder: (context, index) {
+                            return _buildUserRow(_users[index], index + 1);
+                          },
+                        ),
+                ),
+        ),
+
+        // My Rank Fixed Bottom
+        if (!_isLoading && _myRankData != null) _buildMyRankTile(),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String label, List<String> options,
+      String currentValue, Function(String) onChanged) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: AppColors.grayDark,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.gray),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: options.contains(currentValue) ? currentValue : options.first,
+          icon: const Icon(Icons.arrow_drop_down, color: AppColors.grayLight),
+          dropdownColor: AppColors.grayDark,
+          style: AppTextStyles.small.copyWith(color: AppColors.white),
+          items: options.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value == 'All' ? label : value),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != currentValue) {
+              setState(() {
+                onChanged(newValue);
+              });
+              _loadLeaderboard();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserRow(Map<String, dynamic> user, int rank) {
+    // Determine Score Value to display
+    String scoreDisplay = '';
+    if (_selectedCategory == 'Overall') {
+      scoreDisplay = '${user['score'] ?? 0.0}';
+    } else {
+      // Muscle specific
+      final muscles = user['muscleStats'] as Map<String, dynamic>?;
+      if (muscles != null) {
+        final key = _selectedCategory.toLowerCase();
+        final rawScore = muscles[key];
+        // Handle varying types (int or double)
+        if (rawScore is num) {
+          scoreDisplay = rawScore.toDouble().toStringAsFixed(1);
+        } else {
+          scoreDisplay = '0.0';
+        }
+      } else {
+        scoreDisplay = '0.0';
+      }
+    }
+
+    final isMe = _myRankData != null && user['_id'] == _myRankData!['_id'];
+
+    return GestureDetector(
+      onTap: () {
+        if (isMe) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomePage(initialIndex: 4),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfilePage(userId: user['_id']),
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isMe
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.grayDark,
+          borderRadius: BorderRadius.circular(16),
+          border: isMe
+              ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Rank
+            SizedBox(
+              width: 30,
+              child: _buildRankIcon(rank),
+            ),
+            const SizedBox(width: 12),
+
+            // Avatar
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.gray,
+                image: user['profilePicture'] != null &&
+                        user['profilePicture'].isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(user['profilePicture']),
+                        fit: BoxFit.cover)
+                    : null,
+              ),
+              child: user['profilePicture'] == null ||
+                      user['profilePicture'].isEmpty
+                  ? const Icon(Icons.person,
+                      size: 20, color: AppColors.grayLight)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+
+            // Name & Country (placeholder for country)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user['name'] ?? 'User',
+                    style: AppTextStyles.body2.copyWith(
+                        fontWeight: FontWeight.bold, color: AppColors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '@${user['username'] ?? ''}',
+                    style: AppTextStyles.small
+                        .copyWith(color: AppColors.grayLight),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+
+            // Score
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                scoreDisplay,
+                style: AppTextStyles.body2.copyWith(
+                    fontWeight: FontWeight.bold, color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankIcon(int rank) {
+    if (rank == 1) {
+      return const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 28);
+    } else if (rank == 2) {
+      return const Icon(Icons.emoji_events, color: Color(0xFFC0C0C0), size: 28);
+    } else if (rank == 3) {
+      return const Icon(Icons.emoji_events, color: Color(0xFFCD7F32), size: 28);
+    }
+    return Text(
+      '#$rank',
+      style: AppTextStyles.body2
+          .copyWith(fontWeight: FontWeight.bold, color: AppColors.grayLight),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildMyRankTile() {
+    return Container(
+      color: AppColors.backgroundDark,
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Text(
+              'Your Rank',
+              style: AppTextStyles.body2.copyWith(
+                  fontWeight: FontWeight.bold, color: AppColors.white),
+            ),
+            const Spacer(),
+            Text(
+              '#${_myRankData!['rank']}',
+              style: AppTextStyles.h3.copyWith(color: AppColors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
