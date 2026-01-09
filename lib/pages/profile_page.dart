@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/auth_service.dart';
+import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/pages/login_page.dart';
+import 'package:flexly/pages/analysis_detail_page.dart';
+import 'package:intl/intl.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/pages/settings_page.dart';
 import 'package:flexly/pages/edit_profile_page.dart';
@@ -16,7 +19,9 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _authService = AuthService();
+  final _analysisService = AnalysisService();
   Map<String, dynamic>? _userData;
+  List<dynamic> _analyses = [];
   bool _isLoading = true;
 
   @override
@@ -27,11 +32,29 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadUserData() async {
     final user = await _authService.getProfile();
-    if (mounted) {
-      setState(() {
-        _userData = user;
-        _isLoading = false;
-      });
+    try {
+      final analyses = await _analysisService.getAnalyses();
+      if (mounted) {
+        setState(() {
+          _userData = user;
+          _analyses = analyses;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _userData = user;
+          // _analyses remains empty or error handled
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load analysis history: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -62,80 +85,8 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Profile Header
-                const HomeHeader(),
+                HomeHeader(userData: _userData),
                 const SizedBox(height: 20),
-                // Edit Profile and Settings buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Edit profile',
-                        Icons.edit_outlined,
-                        () async {
-                          if (_userData != null) {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EditProfilePage(userData: _userData!),
-                              ),
-                            );
-                            if (result == true) {
-                              _loadUserData();
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Settings',
-                        Icons.settings_outlined,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Logout Button
-                OutlinedButton(
-                  onPressed: _handleLogout,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.grayDark,
-                    side: const BorderSide(color: Colors.red, width: 1.5),
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.logout,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Log out',
-                        style: AppTextStyles.body2.copyWith(
-                          color: Colors.red,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
 
                 // Profile Image Section
                 Container(
@@ -227,7 +178,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildSmallCard(
                         icon: Icons.local_fire_department,
                         label: 'Current Streak',
-                        value: '${_userData?['streak'] ?? 0} days',
+                        // Calculate streak from analyses (fallback to user data if needed, but calculate is better if user data is stuck at 0)
+                        value:
+                            '${AnalysisService.calculateStreak(_analyses)} days',
                         iconColor: AppColors.primary,
                       ),
                     ),
@@ -236,7 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: _buildSmallCard(
                         icon: Icons.analytics_outlined,
                         label: 'Analytics Tracked',
-                        value: '${_userData?['analyticsTracked'] ?? 0}',
+                        value: '${_analyses.length}',
                         iconColor: Colors.blue,
                       ),
                     ),
@@ -254,30 +207,162 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
                 // Posts Grid
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.grayDark,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.grayDark,
-                      width: 1,
+                _analyses.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Text('No posts yet',
+                              style: AppTextStyles.body2
+                                  .copyWith(color: AppColors.grayLight)),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.grayDark,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.grayDark,
+                            width: 1,
+                          ),
+                        ),
+                        child: GridView.builder(
+                          itemCount: _analyses.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                          ),
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final analysis = _analyses[index];
+                            final imageUrls = (analysis['imageUrls'] as List)
+                                .map((e) => e.toString())
+                                .toList();
+                            final firstImageUrl =
+                                imageUrls.isNotEmpty ? imageUrls[0] : null;
+
+                            return GestureDetector(
+                              onTap: () {
+                                final ratingsMap =
+                                    analysis['ratings'] as Map<String, dynamic>;
+                                final double overall =
+                                    (ratingsMap['overall'] as num).toDouble();
+
+                                final bodyParts =
+                                    Map<String, double>.fromEntries(
+                                  ratingsMap.entries
+                                      .where((e) => e.key != 'overall')
+                                      .map((e) => MapEntry(
+                                          e.key, (e.value as num).toDouble())),
+                                );
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AnalysisDetailPage(
+                                      date: DateFormat.yMMMd().format(
+                                          DateTime.parse(
+                                              analysis['createdAt'])),
+                                      overallRating: overall,
+                                      bodyPartRatings: bodyParts,
+                                      adviceTitle: analysis['adviceTitle'] ??
+                                          'Analysis Result',
+                                      adviceDescription:
+                                          analysis['advice'] ?? '',
+                                      imageUrls: imageUrls,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.grayLight,
+                                  borderRadius: BorderRadius.circular(12),
+                                  image: firstImageUrl != null
+                                      ? DecorationImage(
+                                          image: NetworkImage(firstImageUrl),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                const SizedBox(height: 32),
+                // Edit Profile and Settings buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildOutlineButton(
+                        'Edit profile',
+                        Icons.edit_outlined,
+                        () async {
+                          if (_userData != null) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditProfilePage(userData: _userData!),
+                              ),
+                            );
+                            if (result == true) {
+                              _loadUserData();
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildOutlineButton(
+                        'Settings',
+                        Icons.settings_outlined,
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Logout Button
+                OutlinedButton(
+                  onPressed: _handleLogout,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: AppColors.grayDark,
+                    side: const BorderSide(color: Colors.red, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: GridView.count(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: List.generate(6, (index) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.grayLight,
-                          borderRadius: BorderRadius.circular(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.logout,
+                        color: Colors.red,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Log out',
+                        style: AppTextStyles.body2.copyWith(
+                          color: Colors.red,
+                          fontSize: 14,
                         ),
-                      );
-                    }),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 32),

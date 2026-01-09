@@ -2,14 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flexly/config/api_config.dart';
 
 class AuthService {
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/auth';
-    }
-    return 'http://localhost:3000/api/auth';
-  }
+  static String get baseUrl => '${ApiConfig.baseUrl}/auth';
 
   Future<Map<String, dynamic>> register(
       String name, String email, String password) async {

@@ -1,22 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
+import 'package:intl/intl.dart';
 
 class StatisticsGraph extends StatelessWidget {
-  const StatisticsGraph({super.key});
+  final List<dynamic> analyses;
 
-  static const List<Map<String, dynamic>> _weeklyData = [
-    {'day': 'Mon', 'value': 5.0, 'selected': false},
-    {'day': 'Tue', 'value': 6.7, 'selected': true},
-    {'day': 'Wed', 'value': 0.0, 'selected': false},
-    {'day': 'Thu', 'value': 0.0, 'selected': false},
-    {'day': 'Fri', 'value': 0.0, 'selected': false},
-    {'day': 'Sat', 'value': 0.0, 'selected': false},
-    {'day': 'Sun', 'value': 0.0, 'selected': false},
-  ];
+  const StatisticsGraph({
+    super.key,
+    this.analyses = const [],
+  });
+
+  List<Map<String, dynamic>> get _chartData {
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> data = [];
+
+    // Map: "yyyy-MM-dd" -> value
+    final Map<String, double> analysisMap = {};
+    for (var analysis in analyses) {
+      if (analysis['createdAt'] != null && analysis['ratings'] != null) {
+        final date = DateTime.parse(analysis['createdAt']).toLocal();
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
+        final score =
+            (analysis['ratings']['overall'] as num?)?.toDouble() ?? 0.0;
+
+        if (!analysisMap.containsKey(dateKey)) {
+          analysisMap[dateKey] = score;
+        }
+      }
+    }
+
+    // Last 7 days
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dateKey = DateFormat('yyyy-MM-dd').format(day);
+      final dayLabel = DateFormat('E').format(day); // Mon, Tue
+
+      data.add({
+        'day': dayLabel,
+        'value': analysisMap[dateKey] ?? 0.0,
+        'selected': i == 0,
+      });
+    }
+
+    return data;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final data = _chartData;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -32,29 +65,28 @@ class StatisticsGraph extends StatelessWidget {
             height: 180,
             child: Stack(
               children: [
-                // Grid Lines
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildGridLine('10'),
-                    _buildGridLine('6'),
-                    _buildGridLine('3'),
-                    _buildGridLine('0'),
+                    _buildGridLine('10.0'),
+                    _buildGridLine('7.5'),
+                    _buildGridLine('5.0'),
+                    _buildGridLine('2.5'),
+                    _buildGridLine('0.0'),
                   ],
                 ),
-                // Bars
                 Positioned(
-                  left: 16,
-                  top: 8,
-                  bottom: 8,
+                  left: 16, // Adjust for Y-Axis labels width
+                  top: 0,
+                  bottom: 0,
                   right: 0,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: _weeklyData
-                        .map((data) => _buildBar(
-                              data['day'] as String,
-                              data['value'] as double,
-                              data['selected'] as bool,
+                    children: data
+                        .map((item) => _buildBar(
+                              item['day'] as String,
+                              item['value'] as double,
+                              item['selected'] as bool,
                             ))
                         .toList(),
                   ),
@@ -63,12 +95,11 @@ class StatisticsGraph extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // X-Axis Labels
           Padding(
-            padding: const EdgeInsets.only(left: 16),
+            padding: const EdgeInsets.only(left: 32), // Align with bars
             child: Row(
-              children: _weeklyData
-                  .map((data) => _buildXLabel(data['day'] as String))
+              children: data
+                  .map((item) => _buildXLabel(item['day'] as String))
                   .toList(),
             ),
           ),
@@ -81,14 +112,15 @@ class StatisticsGraph extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 16,
+          width: 24, // Fixed width for Y-Axis labels
           child: Text(
             label,
-            style: AppTextStyles.small.copyWith(color: AppColors.grayLight),
+            style: AppTextStyles.small
+                .copyWith(color: AppColors.grayLight, fontSize: 10),
             textAlign: TextAlign.right,
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 8),
         Expanded(
           child: CustomPaint(
             painter: DashedLinePainter(),
@@ -109,43 +141,50 @@ class StatisticsGraph extends StatelessWidget {
   }
 
   Widget _buildBar(String day, double value, bool isSelected) {
-    const double totalHeight = 184;
-    final double barHeight = (value / 10) * totalHeight;
-
+    // Height calculation: Graph height is 180.
+    // We have 5 grid lines.
+    // value 10 -> 100% height.
     return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          if (isSelected) ...[
+      child: LayoutBuilder(builder: (context, constraints) {
+        final height = constraints.maxHeight;
+        final barHeight = (value / 10.0) * height;
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (isSelected && value > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.tooltipBackground,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  value.toStringAsFixed(1),
+                  style: AppTextStyles.caption1.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: Colors.white),
+                ),
+              ),
+              CustomPaint(
+                size: const Size(6, 4),
+                painter: TrianglePainter(),
+              ),
+              const SizedBox(height: 2),
+            ],
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              width: 12,
+              height: barHeight > 0 ? barHeight : 2,
               decoration: BoxDecoration(
-                color: AppColors.tooltipBackground,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                value.toStringAsFixed(1),
-                style:
-                    AppTextStyles.body2.copyWith(fontWeight: FontWeight.bold),
+                color: isSelected ? AppColors.primary : AppColors.barInactive,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(6)),
               ),
             ),
-            CustomPaint(
-              size: const Size(10, 6),
-              painter: TrianglePainter(),
-            ),
-            const SizedBox(height: 4),
           ],
-          Container(
-            width: 24,
-            height: barHeight,
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : AppColors.barInactive,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
-          ),
-        ],
-      ),
+        );
+      }),
     );
   }
 }

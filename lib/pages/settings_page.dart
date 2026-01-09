@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/widgets/home/home_header.dart';
 import 'package:flexly/widgets/primary_button.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:flexly/pages/login_page.dart';
@@ -33,16 +32,28 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Settings',
+          style: AppTextStyles.h3,
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header from profile page
-                const HomeHeader(),
-                const SizedBox(height: 32),
+                const SizedBox(height: 10),
 
                 // Account Section
                 Text(

@@ -4,14 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flexly/config/api_config.dart';
 
 class AnalysisService {
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/analysis';
-    }
-    return 'http://localhost:3000/api/analysis';
-  }
+  static String get baseUrl => '${ApiConfig.baseUrl}/analysis';
 
   Future<Map<String, dynamic>> uploadAndAnalyze(List<File> images) async {
     try {

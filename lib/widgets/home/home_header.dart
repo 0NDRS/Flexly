@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/data/mock_data.dart';
 import 'package:flexly/pages/home.dart';
 import 'package:flexly/services/auth_service.dart';
 
 class HomeHeader extends StatefulWidget {
-  const HomeHeader({super.key});
+  final Map<String, dynamic>? userData;
+
+  const HomeHeader({
+    super.key,
+    this.userData,
+  });
 
   @override
   State<HomeHeader> createState() => _HomeHeaderState();
@@ -20,7 +24,23 @@ class _HomeHeaderState extends State<HomeHeader> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    if (widget.userData != null) {
+      _userData = widget.userData;
+      _profileImageUrl = widget.userData?['profilePicture'];
+    } else {
+      _loadUserData();
+    }
+  }
+
+  @override
+  void didUpdateWidget(HomeHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.userData != oldWidget.userData) {
+      setState(() {
+        _userData = widget.userData;
+        _profileImageUrl = widget.userData?['profilePicture'];
+      });
+    }
   }
 
   Future<void> _loadUserData() async {

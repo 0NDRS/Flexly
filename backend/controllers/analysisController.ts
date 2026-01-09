@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import Analysis from '../models/Analysis'
+import User from '../models/User'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
@@ -151,6 +152,49 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       adviceTitle: aiData.adviceTitle || 'Analysis Result', // Fallback
     })
 
+    // Update User Stats (Score, Analytics Tracked, Streak)
+    const userToUpdate = await User.findById(userId)
+    if (userToUpdate) {
+      // 1. Analytics Tracked
+      userToUpdate.analyticsTracked = (userToUpdate.analyticsTracked || 0) + 1
+
+      // 2. Score (Add overall rating * 10)
+      userToUpdate.score = (userToUpdate.score || 0) + Math.round(overall * 10)
+
+      // 3. Streak Logic
+      // Find the last analysis *before* this new one
+      const lastAnalysis = await Analysis.findOne({
+        user: userId,
+        _id: { $ne: analysis._id },
+      }).sort({ createdAt: -1 })
+
+      if (!lastAnalysis) {
+        // First analysis ever starts a streak
+        userToUpdate.streak = 1
+      } else {
+        const lastDate = new Date(lastAnalysis.createdAt as any)
+        lastDate.setHours(0, 0, 0, 0) // Normalize to midnight
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        // Calculate difference in days
+        const diffTime = Math.abs(today.getTime() - lastDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+        if (diffDays === 1) {
+          // Consecutive day: increment streak
+          userToUpdate.streak = (userToUpdate.streak || 0) + 1
+        } else if (diffDays > 1) {
+          // Missed a day: reset streak
+          userToUpdate.streak = 1
+        }
+        // If diffDays == 0 (same day), maintain current streak
+      }
+
+      await userToUpdate.save()
+    }
+
     res.status(201).json(analysis)
   } catch (error) {
     console.error('Analysis Error:', error)
@@ -165,12 +209,11 @@ export const analyzePhysique = async (req: Request, res: Response) => {
 // @access  Private
 export const getAnalyses = async (req: Request, res: Response) => {
   try {
-    // Same user fetch logic
-    let userId = (req as any).user?.id
+    const userId = (req as any).user?.id
+
     if (!userId) {
-      const User = require('../models/User').default
-      const firstUser = await User.findOne()
-      if (firstUser) userId = firstUser._id
+      res.status(401).json({ message: 'User not authenticated' })
+      return
     }
 
     const analyses = await Analysis.find({ user: userId }).sort({
