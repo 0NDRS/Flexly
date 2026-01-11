@@ -4,6 +4,7 @@ import {
   loginUser,
   getMe,
   updateProfile,
+  changePassword,
 } from '../controllers/authController'
 import { protect } from '../middleware/authMiddleware'
 import upload from '../middleware/uploadMiddleware'
@@ -21,5 +22,8 @@ router.get('/me', protect, getMe)
 
 // Route to update user profile (Protected)
 router.put('/profile', protect, upload.single('profilePicture'), updateProfile)
+
+// Route to change password (Protected)
+router.put('/password', protect, changePassword)
 
 export default router

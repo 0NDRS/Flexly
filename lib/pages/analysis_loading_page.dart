@@ -153,14 +153,14 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.white),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text('AI Analysis', style: AppTextStyles.h2),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: AppColors.white),
+            icon: Icon(Icons.settings, color: AppColors.white),
             onPressed: () {},
           ),
         ],
@@ -200,8 +200,8 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
                   child: Text('Try Again', style: AppTextStyles.button2),
                 ),
               ] else if (_isCompleted) ...[
-                const Icon(Icons.check_circle_outline,
-                    color: AppColors.primary, size: 64),
+                Icon(Icons.check_circle_outline,
+                  color: AppColors.primary, size: 64),
                 const SizedBox(height: 24),
                 Text(
                   'Analysis Complete!',

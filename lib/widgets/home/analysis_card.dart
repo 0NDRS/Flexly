@@ -11,6 +11,7 @@ class AnalysisCard extends StatelessWidget {
   final String? imageUrl;
   final VoidCallback? onDetailsTap;
   final VoidCallback? onUploadTap;
+  final VoidCallback? onStreakTap;
 
   const AnalysisCard({
     super.key,
@@ -21,6 +22,7 @@ class AnalysisCard extends StatelessWidget {
     this.imageUrl,
     this.onDetailsTap,
     this.onUploadTap,
+    this.onStreakTap,
   });
 
   @override
@@ -98,11 +100,11 @@ class AnalysisCard extends StatelessWidget {
                 : null,
           ),
           // Placeholder for a chart or image
-          child: imageUrl == null
-              ? const Center(
-                  child:
-                      Icon(Icons.bar_chart, size: 48, color: AppColors.primary),
-                )
+            child: imageUrl == null
+              ? Center(
+                child: Icon(Icons.bar_chart,
+                  size: 48, color: AppColors.primary),
+              )
               : null,
         ),
         const SizedBox(height: 12),
@@ -134,12 +136,16 @@ class AnalysisCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _buildStatItem(
-              icon: Icons.local_fire_department,
-              iconColor: AppColors.fireOrange,
-              iconBgColor: AppColors.fireBackground,
-              label: 'Streak',
-              value: '$streak days',
+            child: GestureDetector(
+              onTap: onStreakTap,
+              behavior: HitTestBehavior.opaque,
+              child: _buildStatItem(
+                icon: Icons.local_fire_department,
+                iconColor: AppColors.fireOrange,
+                iconBgColor: AppColors.fireBackground,
+                label: 'Streak',
+                value: '$streak days',
+              ),
             ),
           ),
           const SizedBox(width: 16),

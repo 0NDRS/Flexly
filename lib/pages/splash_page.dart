@@ -204,11 +204,11 @@ class _SplashCard2 extends StatelessWidget {
           Container(
             width: 100,
             height: 100,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.grayDark,
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.favorite,
                 size: 50,
@@ -256,11 +256,11 @@ class _SplashCard3 extends StatelessWidget {
           Container(
             width: 100,
             height: 100,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.grayDark,
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.local_fire_department,
                 size: 50,
@@ -308,11 +308,11 @@ class _SplashCard4 extends StatelessWidget {
           Container(
             width: 100,
             height: 100,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.grayDark,
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.settings,
                 size: 50,

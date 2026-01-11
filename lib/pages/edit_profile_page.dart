@@ -104,15 +104,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
       setState(() {
         _profileImage = File(pickedFile.path);
         _checkForChanges();
       });
+    }
+  }
+
+  Future<void> _selectImageSource() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.grayDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.white),
+                title: const Text('Choose from gallery',
+                    style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera, color: Colors.white),
+                title: const Text('Take a photo',
+                    style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source != null) {
+      await _pickImage(source);
     }
   }
 
@@ -175,34 +210,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Column(
             children: [
               GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppColors.grayDark,
-                    shape: BoxShape.circle,
-                    image: _profileImage != null
-                        ? DecorationImage(
-                            image: FileImage(_profileImage!),
-                            fit: BoxFit.cover,
-                          )
-                        : (widget.userData['profilePicture'] != null &&
-                                widget.userData['profilePicture'] != '')
+                onTap: _selectImageSource,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.grayDark,
+                        shape: BoxShape.circle,
+                        image: _profileImage != null
                             ? DecorationImage(
-                                image: NetworkImage(
-                                    widget.userData['profilePicture']),
+                                image: FileImage(_profileImage!),
                                 fit: BoxFit.cover,
                               )
-                            : null,
-                    border: Border.all(color: AppColors.primary, width: 2),
-                  ),
-                  child: (_profileImage == null &&
-                          (widget.userData['profilePicture'] == null ||
-                              widget.userData['profilePicture'] == ''))
-                      ? const Icon(Icons.camera_alt,
-                          color: Colors.white, size: 40)
-                      : null,
+                            : (widget.userData['profilePicture'] != null &&
+                                    widget.userData['profilePicture'] != '')
+                                ? DecorationImage(
+                                    image: NetworkImage(
+                                        widget.userData['profilePicture']),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                        border: Border.all(color: AppColors.primary, width: 3),
+                      ),
+                      child: (_profileImage == null &&
+                              (widget.userData['profilePicture'] == null ||
+                                  widget.userData['profilePicture'] == ''))
+                          ? const Icon(Icons.person,
+                              color: Colors.white, size: 48)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),

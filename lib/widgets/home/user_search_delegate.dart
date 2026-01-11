@@ -12,23 +12,23 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.backgroundDark,
         elevation: 0,
       ),
-      inputDecorationTheme: const InputDecorationTheme(
+      inputDecorationTheme: InputDecorationTheme(
         border: InputBorder.none,
         hintStyle: TextStyle(color: AppColors.grayLight),
       ),
-      textTheme: const TextTheme(
+      textTheme: const TextTheme().copyWith(
         titleLarge: TextStyle(color: AppColors.white),
       ),
-      textSelectionTheme: const TextSelectionThemeData(
+      textSelectionTheme: TextSelectionThemeData(
         cursorColor: AppColors.primary,
         selectionColor: AppColors.primary,
         selectionHandleColor: AppColors.primary,
       ),
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.primary,
         surface: AppColors.backgroundDark,
       ),
@@ -40,7 +40,7 @@ class UserSearchDelegate extends SearchDelegate {
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: const Icon(Icons.clear, color: AppColors.grayLight),
+        icon: Icon(Icons.clear, color: AppColors.grayLight),
         onPressed: () {
           query = '';
         },
@@ -51,7 +51,7 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back, color: AppColors.white),
+      icon: Icon(Icons.arrow_back, color: AppColors.white),
       onPressed: () {
         close(context, null);
       },
@@ -118,7 +118,7 @@ class UserSearchDelegate extends SearchDelegate {
                       : null,
                   child: user['profilePicture'] == null ||
                           user['profilePicture'].isEmpty
-                      ? const Icon(Icons.person, color: AppColors.grayLight)
+                      ? Icon(Icons.person, color: AppColors.grayLight)
                       : null,
                 ),
                 title: Text(

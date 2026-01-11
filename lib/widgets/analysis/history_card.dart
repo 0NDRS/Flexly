@@ -91,7 +91,7 @@ class HistoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Divider(color: AppColors.gray, height: 1),
+          Divider(color: AppColors.gray, height: 1),
           const SizedBox(height: 16),
           // Stats Grid
           Row(

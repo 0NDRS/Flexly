@@ -6,6 +6,11 @@ import {
   getFeed,
   deleteAnalysis,
 } from '../controllers/analysisController'
+import {
+  addCommentToAnalysis,
+  getCommentsForAnalysis,
+  deleteComment,
+} from '../controllers/commentController'
 import upload from '../middleware/uploadMiddleware'
 import { protect } from '../middleware/authMiddleware'
 
@@ -22,6 +27,11 @@ router.get('/feed', protect, getFeed)
 
 // GET /api/analysis/user/:userId - Get public analyses of a user
 router.get('/user/:userId', protect, getAnalysesByUserId)
+
+// Comments
+router.get('/:id/comments', protect, getCommentsForAnalysis)
+router.post('/:id/comments', protect, addCommentToAnalysis)
+router.delete('/comments/:commentId', protect, deleteComment)
 
 // DELETE /api/analysis/:id - Delete analysis
 router.delete('/:id', protect, deleteAnalysis)

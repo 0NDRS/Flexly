@@ -162,7 +162,7 @@ class _HomeHeaderState extends State<HomeHeader> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.notifications_outlined,
                   color: AppColors.white,
                   size: 24,
@@ -174,7 +174,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                     child: Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),

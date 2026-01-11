@@ -54,9 +54,9 @@ class _StatisticsPageState extends State<StatisticsPage>
             ),
             TabBar(
               controller: _tabController,
-              indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: AppColors.grayLight,
+              indicatorColor: AppColors.primary,
               labelStyle: AppTextStyles.button2,
               dividerColor: Colors.transparent, // Fixes white line
               tabs: const [
@@ -190,7 +190,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.analytics_outlined,
+            Icon(Icons.analytics_outlined,
                 size: 64, color: AppColors.grayLight),
             const SizedBox(height: 16),
             Text(
@@ -584,7 +584,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: options.contains(currentValue) ? currentValue : options.first,
-          icon: const Icon(Icons.arrow_drop_down, color: AppColors.grayLight),
+          icon: Icon(Icons.arrow_drop_down, color: AppColors.grayLight),
           dropdownColor: AppColors.grayDark,
           style: AppTextStyles.small.copyWith(color: AppColors.white),
           items: options.map((String value) {
@@ -685,8 +685,8 @@ class _LeaderboardTabState extends State<LeaderboardTab>
               ),
               child: user['profilePicture'] == null ||
                       user['profilePicture'].isEmpty
-                  ? const Icon(Icons.person,
-                      size: 20, color: AppColors.grayLight)
+                  ? Icon(Icons.person,
+                    size: 20, color: AppColors.grayLight)
                   : null,
             ),
             const SizedBox(width: 12),

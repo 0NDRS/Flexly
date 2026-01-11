@@ -6,6 +6,7 @@ import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:intl/intl.dart';
 import 'package:flexly/services/event_bus.dart';
+import 'package:flexly/utils/unit_utils.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -24,11 +25,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool _isLoading = true;
   bool _isFollowing = false;
   bool _isFollowLoading = false;
+  String _unitSystem = UnitUtils.metric;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadUnitPreference();
   }
 
   Future<void> _loadData() async {
@@ -59,6 +62,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _loadUnitPreference() async {
+    final preference = await UnitUtils.getPreferredUnits();
+    if (mounted) {
+      setState(() {
+        _unitSystem = preference;
+      });
     }
   }
 
@@ -115,7 +127,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: const BackButton(color: AppColors.white),
+          leading: BackButton(color: AppColors.white),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -126,7 +138,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: AppColors.white),
+        leading: BackButton(color: AppColors.white),
         title:
             Text(_userData?['username'] ?? 'Profile', style: AppTextStyles.h3),
         centerTitle: true,
@@ -261,9 +273,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           _buildStatColumn(
                               'Age', '${_userData?['age'] ?? '-'}'),
                           _buildStatColumn(
-                              'Height', '${_userData?['height'] ?? '-'} cm'),
-                          _buildStatColumn(
-                              'Weight', '${_userData?['weight'] ?? '-'} kg'),
+                              'Height',
+                              UnitUtils.formatHeight(
+                                _userData?['height'], _unitSystem)),
+                            _buildStatColumn(
+                              'Weight',
+                              UnitUtils.formatWeight(
+                                _userData?['weight'], _unitSystem)),
                         ],
                       ),
                     ],
@@ -408,7 +424,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.star,
+                                            Icon(Icons.star,
                                               size: 10,
                                               color: AppColors.primary),
                                           const SizedBox(width: 4),

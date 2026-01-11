@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:flexly/pages/analysis_detail_page.dart';
+import 'package:flexly/pages/edit_profile_page.dart';
+import 'package:flexly/pages/login_page.dart';
+import 'package:flexly/pages/settings_page.dart';
+import 'package:flexly/pages/streak_page.dart';
+import 'package:flexly/pages/home.dart';
+import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/services/auth_service.dart';
+import 'package:flexly/services/event_bus.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
-import 'package:flexly/services/auth_service.dart';
-import 'package:flexly/services/analysis_service.dart';
-import 'package:flexly/pages/login_page.dart';
-import 'package:flexly/pages/analysis_detail_page.dart';
-import 'package:intl/intl.dart';
+import 'package:flexly/utils/unit_utils.dart';
 import 'package:flexly/widgets/home/home_header.dart';
-import 'package:flexly/pages/settings_page.dart';
-import 'package:flexly/pages/edit_profile_page.dart';
-import 'package:flexly/services/event_bus.dart';
-import 'dart:async';
+import 'package:intl/intl.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final VoidCallback? onNavigateToAnalysis;
+
+  const ProfilePage({super.key, this.onNavigateToAnalysis});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -26,14 +31,21 @@ class _ProfilePageState extends State<ProfilePage> {
   List<dynamic> _analyses = [];
   bool _isLoading = true;
   StreamSubscription? _eventSubscription;
+  String _unitSystem = UnitUtils.metric;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadUnitPreference();
     _eventSubscription = EventBus().stream.listen((event) {
       if (event is AnalysisDeletedEvent || event is UserFollowEvent) {
         _loadUserData();
+      }
+      if (event is UnitsPreferenceChangedEvent) {
+        setState(() {
+          _unitSystem = event.units;
+        });
       }
     });
   }
@@ -69,6 +81,28 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _loadUnitPreference() async {
+    final preference = await UnitUtils.getPreferredUnits();
+    if (mounted) {
+      setState(() {
+        _unitSystem = preference;
+      });
+    }
+  }
+
+  Future<void> _goToEditProfile() async {
+    if (_userData == null) return;
+    final updated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(userData: _userData!),
+      ),
+    );
+    if (updated == true) {
+      await _loadUserData();
     }
   }
 
@@ -129,30 +163,71 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     children: [
                       // Large Profile Image with red border
-                      Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 5,
-                          ),
-                          color: AppColors.grayLight,
-                          image: _userData?['profilePicture'] != null &&
-                                  _userData!['profilePicture'] != ''
-                              ? DecorationImage(
-                                  image: NetworkImage(
-                                      _userData!['profilePicture']),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
+                      GestureDetector(
+                        onTap: () async {
+                          if (_userData == null) return;
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProfilePage(
+                                userData: _userData!,
+                              ),
+                            ),
+                          );
+                          if (updated == true) {
+                            _loadUserData();
+                          }
+                        },
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 180,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.primary,
+                                  width: 5,
+                                ),
+                                color: AppColors.grayLight,
+                                image: _userData?['profilePicture'] != null &&
+                                        _userData!['profilePicture'] != ''
+                                    ? DecorationImage(
+                                        image:
+                                            NetworkImage(_userData!['profilePicture']),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: _userData?['profilePicture'] == null ||
+                                      _userData!['profilePicture'] == ''
+                                  ? const Icon(Icons.person,
+                                      size: 80, color: Colors.white)
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primary,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: _userData?['profilePicture'] == null ||
-                                _userData!['profilePicture'] == ''
-                            ? const Icon(Icons.person,
-                                size: 80, color: Colors.white)
-                            : null,
                       ),
                       const SizedBox(height: 24),
                       // Nick name
@@ -174,6 +249,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontSize: 13,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      if ((_userData?['bio'] ?? '').toString().isNotEmpty)
+                        Text(
+                          _userData!['bio'],
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.grayLight,
+                            fontSize: 13,
+                          ),
+                        ),
                       const SizedBox(height: 24),
                       // Stats row
                       Row(
@@ -210,9 +295,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           _buildStatColumn(
                               'Age', '${_userData?['age'] ?? '-'}'),
                           _buildStatColumn(
-                              'Height', '${_userData?['height'] ?? '-'} cm'),
-                          _buildStatColumn(
-                              'Weight', '${_userData?['weight'] ?? '-'} kg'),
+                              'Height',
+                              UnitUtils.formatHeight(
+                                _userData?['height'], _unitSystem)),
+                            _buildStatColumn(
+                              'Weight',
+                              UnitUtils.formatWeight(
+                                _userData?['weight'], _unitSystem)),
                         ],
                       ),
                     ],
@@ -232,6 +321,16 @@ class _ProfilePageState extends State<ProfilePage> {
                             '${AnalysisService.calculateStreak(_analyses)} days',
                         iconColor: AppColors.fireOrange,
                         iconBgColor: AppColors.fireBackground,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => StreakPage(
+                                initialAnalyses: _analyses,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -242,6 +341,20 @@ class _ProfilePageState extends State<ProfilePage> {
                         value: '${_analyses.length}',
                         iconColor: AppColors.waterBlue,
                         iconBgColor: AppColors.waterBackground,
+                        onTap: () {
+                          if (widget.onNavigateToAnalysis != null) {
+                            widget.onNavigateToAnalysis!();
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HomePage(
+                                  initialIndex: 2,
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -359,7 +472,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.star,
+                                            Icon(Icons.star,
                                               size: 10,
                                               color: AppColors.primary),
                                           const SizedBox(width: 4),
@@ -470,7 +583,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: AppColors.grayDark,
-        side: const BorderSide(color: AppColors.grayLight, width: 1.5),
+        side: BorderSide(color: AppColors.grayLight, width: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 28),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -526,53 +639,58 @@ class _ProfilePageState extends State<ProfilePage> {
     required String value,
     required Color iconColor,
     required Color iconBgColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.grayDark,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.grayDark,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.grayLight,
-                    fontSize: 11,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.grayLight,
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: AppTextStyles.h3.copyWith(
-                    color: AppColors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

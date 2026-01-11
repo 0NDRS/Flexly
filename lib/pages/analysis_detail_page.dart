@@ -4,6 +4,8 @@ import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/data/mock_data.dart';
 import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/services/event_bus.dart';
+import 'package:flexly/services/comment_service.dart';
+import 'package:flexly/services/auth_service.dart';
 
 class AnalysisDetailPage extends StatefulWidget {
   final String date;
@@ -33,6 +35,13 @@ class AnalysisDetailPage extends StatefulWidget {
 
 class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
   int _currentImageIndex = 0;
+  final _commentService = CommentService();
+  final _authService = AuthService();
+  final TextEditingController _commentController = TextEditingController();
+  List<dynamic> _comments = [];
+  bool _commentsLoading = false;
+  bool _isPosting = false;
+  String? _currentUserId;
 
   Future<void> _handleDelete() async {
     if (widget.analysisId == null) return;
@@ -41,17 +50,16 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.backgroundDark,
-        title: const Text('Delete Analysis?',
+        title: Text('Delete Analysis?',
             style: TextStyle(color: AppColors.white)),
-        content: const Text(
+        content: Text(
           'Are you sure you want to delete this analysis? This action cannot be undone.',
           style: TextStyle(color: AppColors.grayLight),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child:
-                const Text('Cancel', style: TextStyle(color: AppColors.white)),
+            child: Text('Cancel', style: TextStyle(color: AppColors.white)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -76,6 +84,91 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         }
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+    _loadComments();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _authService.getUser();
+    if (mounted && user != null) {
+      setState(() {
+        _currentUserId = user['_id'];
+      });
+    }
+  }
+
+  Future<void> _loadComments() async {
+    if (widget.analysisId == null) return;
+    if (mounted) setState(() => _commentsLoading = true);
+    try {
+      final data = await _commentService.getComments(widget.analysisId!);
+      if (mounted) {
+        setState(() {
+          _comments = data;
+          _commentsLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _commentsLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load comments: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _submitComment() async {
+    if (widget.analysisId == null || _isPosting) return;
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isPosting = true);
+    try {
+      final comment = await _commentService.addComment(widget.analysisId!, text);
+      if (mounted) {
+        setState(() {
+          _comments.insert(0, comment);
+          _isPosting = false;
+          _commentController.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isPosting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to post comment: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteComment(String commentId) async {
+    try {
+      await _commentService.deleteComment(commentId);
+      if (mounted) {
+        setState(() {
+          _comments.removeWhere((c) => c['_id'] == commentId);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete comment: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -325,6 +418,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+                _buildCommentsSection(),
                 const SizedBox(height: 48),
               ],
             ),
@@ -390,5 +485,148 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  Widget _buildCommentsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Comments:', style: AppTextStyles.h2),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.grayDark,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.gray, width: 1),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  style: AppTextStyles.body2.copyWith(color: AppColors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Add a comment...',
+                    hintStyle: TextStyle(color: AppColors.grayLight),
+                    border: InputBorder.none,
+                  ),
+                  minLines: 1,
+                  maxLines: 4,
+                ),
+              ),
+              IconButton(
+                icon: _isPosting
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.white,
+                        ),
+                      )
+                    : Icon(Icons.send, color: AppColors.primary),
+                onPressed: _isPosting ? null : _submitComment,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_commentsLoading)
+          Center(
+            child:
+                CircularProgressIndicator(color: AppColors.white, strokeWidth: 2),
+          )
+        else if (_comments.isEmpty)
+          Text(
+            'No comments yet. Be the first!',
+            style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _comments.length,
+            separatorBuilder: (_, __) => Divider(color: AppColors.gray),
+            itemBuilder: (context, index) {
+              final comment = _comments[index];
+              final user = comment['user'] ?? {};
+              final createdAt = comment['createdAt'] != null
+                  ? DateTime.parse(comment['createdAt'])
+                  : DateTime.now();
+              final canDelete =
+                  _currentUserId != null && user['_id'] == _currentUserId;
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.gray,
+                    backgroundImage: user['profilePicture'] != null &&
+                            (user['profilePicture'] as String).isNotEmpty
+                        ? NetworkImage(user['profilePicture'])
+                        : null,
+                    child: user['profilePicture'] == null ||
+                            (user['profilePicture'] as String).isEmpty
+                        ? Icon(Icons.person,
+                          color: AppColors.grayLight, size: 18)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              user['username'] != null
+                                  ? '@${user['username']}'
+                                  : (user['name'] ?? 'User'),
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _timeAgo(createdAt),
+                              style: AppTextStyles.caption2
+                                  .copyWith(color: AppColors.grayLight),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          comment['text'] ?? '',
+                          style:
+                              AppTextStyles.body2.copyWith(color: AppColors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (canDelete)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline,
+                          size: 18, color: AppColors.grayLight),
+                      onPressed: () => _deleteComment(comment['_id']),
+                    ),
+                ],
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  String _timeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inDays > 365) return '${(diff.inDays / 365).floor()}y ago';
+    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()}mo ago';
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'Just now';
   }
 }

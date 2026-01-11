@@ -248,8 +248,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         elevation: 0,
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: AppColors.white)
+                        child: _isLoading
+                          ? CircularProgressIndicator(color: AppColors.white)
                           : Text(
                               'Sign up',
                               style: AppTextStyles.h2.copyWith(
@@ -268,7 +268,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         // TODO: Implement Google sign in
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.gray, width: 1),
+                        side: BorderSide(color: AppColors.gray, width: 1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),

@@ -190,9 +190,58 @@ export const updateProfile = async (req: Request, res: Response) => {
     const user = await User.findById((req as any).user.id)
 
     if (user) {
-      user.name = req.body.name || user.name
+      const cooldownMs = 90 * 24 * 60 * 60 * 1000 // 90 days
+      const now = new Date()
+
+      // Name change with cooldown
+      if (req.body.name && req.body.name !== user.name) {
+        if (
+          user.nameChangedAt &&
+          now.getTime() - user.nameChangedAt.getTime() < cooldownMs
+        ) {
+          const remainingMs =
+            cooldownMs - (now.getTime() - user.nameChangedAt.getTime())
+          const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24))
+          res.status(400).json({
+            message: `Name can be changed again in ${remainingDays} day(s)`,
+          })
+          return
+        }
+        user.name = req.body.name
+        user.nameChangedAt = now
+      }
+
       user.email = req.body.email || user.email
-      if (req.body.username) user.username = req.body.username
+
+      // Username change with cooldown and uniqueness check
+      if (req.body.username && req.body.username !== user.username) {
+        if (
+          user.usernameChangedAt &&
+          now.getTime() - user.usernameChangedAt.getTime() < cooldownMs
+        ) {
+          const remainingMs =
+            cooldownMs - (now.getTime() - user.usernameChangedAt.getTime())
+          const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24))
+          res.status(400).json({
+            message: `Username can be changed again in ${remainingDays} day(s)`,
+          })
+          return
+        }
+
+        const existingUsername = await User.findOne({
+          username: req.body.username,
+          _id: { $ne: user._id },
+        })
+
+        if (existingUsername) {
+          res.status(400).json({ message: 'Username is already taken' })
+          return
+        }
+
+        user.username = req.body.username
+        user.usernameChangedAt = now
+      }
+
       if (req.body.bio) user.bio = req.body.bio
 
       if (req.body.gender) user.gender = req.body.gender
@@ -254,6 +303,31 @@ export const updateProfile = async (req: Request, res: Response) => {
     } else {
       res.status(404).json({ message: 'User not found' })
     }
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+    const user = await User.findById((req as any).user.id).select('+password')
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+
+    const matches = await (user as any).matchPassword(currentPassword)
+    if (!matches) {
+      res.status(400).json({ message: 'Current password is incorrect' })
+      return
+    }
+
+    user.password = newPassword
+    await user.save()
+
+    res.json({ message: 'Password updated' })
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })
   }

@@ -4,6 +4,11 @@ import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/widgets/primary_button.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:flexly/pages/login_page.dart';
+import 'package:flexly/pages/edit_profile_page.dart';
+import 'package:flexly/pages/change_password_page.dart';
+import 'package:flexly/pages/privacy_security_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flexly/services/event_bus.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,8 +20,46 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _authService = AuthService();
   bool _notificationsEnabled = true;
-  bool _themeEnabled = true;
   String _selectedUnits = 'Metric'; // 'Metric' or 'Imperial'
+  Map<String, dynamic>? _userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    _loadUnitsPreference();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getUser();
+    if (mounted) {
+      setState(() {
+        _userData = user;
+      });
+    }
+  }
+
+  Future<void> _loadUnitsPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedUnits = prefs.getString('preferredUnits');
+    if (savedUnits != null && mounted) {
+      setState(() {
+        _selectedUnits = savedUnits;
+      });
+    }
+  }
+
+  Future<void> _updateUnits(String units) async {
+    if (_selectedUnits == units) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('preferredUnits', units);
+    if (mounted) {
+      setState(() {
+        _selectedUnits = units;
+      });
+    }
+    EventBus().fire(UnitsPreferenceChangedEvent(units));
+  }
 
   Future<void> _handleLogout() async {
     await _authService.logout();
@@ -68,19 +111,47 @@ class _SettingsPageState extends State<SettingsPage> {
                   _buildSettingItem(
                     icon: Icons.edit_outlined,
                     title: 'Edit profile',
-                    onTap: () {},
+                    onTap: () {
+                      if (_userData == null) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditProfilePage(
+                            userData: _userData!,
+                          ),
+                        ),
+                      ).then((updated) {
+                        if (updated == true) {
+                          _loadUser();
+                        }
+                      });
+                    },
                   ),
                   _buildDivider(),
                   _buildSettingItem(
                     icon: Icons.lock_outlined,
                     title: 'Change password',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordPage(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildSettingItem(
                     icon: Icons.security_outlined,
                     title: 'Privacy & Security',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PrivacySecurityPage(),
+                        ),
+                      );
+                    },
                   ),
                 ]),
                 const SizedBox(height: 32),
@@ -110,22 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Icons.straighten_outlined,
                     title: 'Units',
                     selectedUnits: _selectedUnits,
-                    onUnitsChanged: (units) {
-                      setState(() {
-                        _selectedUnits = units;
-                      });
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildSettingItemWithToggle(
-                    icon: Icons.palette_outlined,
-                    title: 'Theme',
-                    value: _themeEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _themeEnabled = value;
-                      });
-                    },
+                    onUnitsChanged: _updateUnits,
                   ),
                 ]),
                 const SizedBox(height: 32),

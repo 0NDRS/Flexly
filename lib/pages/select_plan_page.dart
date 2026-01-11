@@ -189,13 +189,12 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 '>',
-                                style: TextStyle(
-                                  color: AppColors.white,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                ),
+                                ).copyWith(color: AppColors.white),
                               ),
                             ],
                           ),
@@ -278,7 +277,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.check,
                     color: AppColors.white,

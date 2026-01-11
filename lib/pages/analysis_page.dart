@@ -7,6 +7,7 @@ import 'package:flexly/widgets/analysis/analysis_stats_row.dart';
 import 'package:flexly/widgets/analysis/history_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:flexly/pages/analysis_loading_page.dart';
+import 'package:flexly/pages/streak_page.dart';
 import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/services/event_bus.dart';
 import 'dart:async';
@@ -208,6 +209,16 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 AnalysisStatsRow(
                   streak: AnalysisService.calculateStreak(_analyses),
                   tracked: _analyses.length,
+                  onStreakTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StreakPage(
+                          initialAnalyses: _analyses,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
                 Text(

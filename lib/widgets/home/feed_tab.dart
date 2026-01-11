@@ -161,7 +161,7 @@ class _FeedTabState extends State<FeedTab> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.group_outlined,
+                    Icon(Icons.group_outlined,
                       size: 64, color: AppColors.grayLight),
                   const SizedBox(height: 16),
                   Text(
@@ -297,8 +297,8 @@ class _FeedTabState extends State<FeedTab> {
                           : null,
                       child: user['profilePicture'] == null ||
                               user['profilePicture'].isEmpty
-                          ? const Icon(Icons.person,
-                              color: AppColors.grayLight, size: 20)
+                          ? Icon(Icons.person,
+                            color: AppColors.grayLight, size: 20)
                           : null,
                     ),
                   ),
@@ -330,8 +330,8 @@ class _FeedTabState extends State<FeedTab> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star,
-                            size: 14, color: AppColors.primary),
+                        Icon(Icons.star,
+                          size: 14, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
                           overall.toStringAsFixed(1),

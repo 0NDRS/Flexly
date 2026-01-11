@@ -5,11 +5,13 @@ import 'package:flexly/theme/app_text_styles.dart';
 class AnalysisStatsRow extends StatelessWidget {
   final int streak;
   final int tracked;
+  final VoidCallback? onStreakTap;
 
   const AnalysisStatsRow({
     super.key,
     this.streak = 0,
     this.tracked = 0,
+    this.onStreakTap,
   });
 
   @override
@@ -17,11 +19,15 @@ class AnalysisStatsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard(
-            icon: Icons.local_fire_department_rounded,
-            iconColor: AppColors.fireOrange,
-            label: 'Streak',
-            value: '$streak days',
+          child: GestureDetector(
+            onTap: onStreakTap,
+            behavior: HitTestBehavior.opaque,
+            child: _buildStatCard(
+              icon: Icons.local_fire_department_rounded,
+              iconColor: AppColors.fireOrange,
+              label: 'Streak',
+              value: '$streak days',
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -54,7 +60,7 @@ class AnalysisStatsRow extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.backgroundDark,
               shape: BoxShape.circle,
             ),

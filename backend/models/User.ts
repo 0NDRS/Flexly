@@ -74,6 +74,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  nameChangedAt: {
+    type: Date,
+  },
+  usernameChangedAt: {
+    type: Date,
+  },
   password: {
     type: String,
     required: [true, 'Please add a password'],

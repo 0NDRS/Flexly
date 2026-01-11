@@ -7,6 +7,7 @@ import 'package:flexly/widgets/home/statistics_graph.dart';
 import 'package:flexly/widgets/home/training_tip_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:flexly/pages/analysis_loading_page.dart';
+import 'package:flexly/pages/streak_page.dart';
 import 'package:flexly/services/analysis_service.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
@@ -205,6 +206,16 @@ class _HomeContentState extends State<HomeContent> {
                       : null,
                   onDetailsTap: () => _navigateToDetails(context),
                   onUploadTap: () => _handleUpload(context),
+                  onStreakTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StreakPage(
+                          initialAnalyses: _analyses,
+                        ),
+                      ),
+                    );
+                  },
                 )
               else
                 Container(

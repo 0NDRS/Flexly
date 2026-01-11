@@ -16,7 +16,7 @@ class BodyInfoPage extends StatefulWidget {
 class _BodyInfoPageState extends State<BodyInfoPage> {
   final _authService = AuthService();
   bool _isLoading = false;
-  String? selectedGender;
+  String? selectedGender = 'Male';
   final TextEditingController _ageController =
       TextEditingController(text: '18');
   final TextEditingController _heightController =
@@ -178,13 +178,12 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               '>',
-                              style: TextStyle(
-                                color: AppColors.white,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                              ),
+                              ).copyWith(color: AppColors.white),
                             ),
                           ],
                         ),
@@ -232,7 +231,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
                   color: AppColors.white,
                   size: 24,
@@ -346,7 +345,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                       Navigator.pop(context);
                     },
                     trailing: selectedGender == genderOptions[index]
-                        ? const Icon(
+                        ? Icon(
                             Icons.check,
                             color: AppColors.primary,
                           )
@@ -362,19 +361,12 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
   }
 
   Future<void> _handleContinue() async {
-    if (selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your gender')),
-      );
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
 
     final updates = {
-      'gender': selectedGender!,
+      'gender': selectedGender ?? 'Male',
       'age': _ageController.text,
       'height': _heightController.text,
       'weight': _weightController.text,

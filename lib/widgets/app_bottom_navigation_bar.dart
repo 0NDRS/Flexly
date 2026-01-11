@@ -15,12 +15,12 @@ class AppBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.grayDark,
         border: Border(
           top: BorderSide(color: AppColors.gray, width: 1),
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: SizedBox(
@@ -60,10 +60,10 @@ class AppBottomNavigationBar extends StatelessWidget {
                 child: Container(
                   width: 40, // Width of the red indicator
                   height: 3,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius:
-                        BorderRadius.vertical(bottom: Radius.circular(2)),
+                        const BorderRadius.vertical(bottom: Radius.circular(2)),
                   ),
                 ),
               ),

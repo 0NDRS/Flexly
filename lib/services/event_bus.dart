@@ -32,3 +32,8 @@ class AnalysisDeletedEvent {
   final String analysisId;
   AnalysisDeletedEvent(this.analysisId);
 }
+
+class UnitsPreferenceChangedEvent {
+  final String units;
+  UnitsPreferenceChangedEvent(this.units);
+}

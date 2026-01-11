@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
       const AnalysisPage(),
       // Reload StatisticsPage every time it's opened to refresh data
       _currentIndex == 3 ? const StatisticsPage() : const SizedBox(),
-      const ProfilePage(),
+      ProfilePage(onNavigateToAnalysis: () => _onTabChange(2)),
     ];
 
     return Scaffold(

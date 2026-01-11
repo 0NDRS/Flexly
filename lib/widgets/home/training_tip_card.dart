@@ -39,7 +39,7 @@ class TrainingTipCard extends StatelessWidget {
                 color: AppColors.gray,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.fitness_center,
                 color: AppColors.grayLight,
                 size: 32,
@@ -84,7 +84,7 @@ class TrainingTipCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
               color: AppColors.grayLight,
               size: 16,
