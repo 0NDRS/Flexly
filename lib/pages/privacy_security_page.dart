@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flexly/services/lock_service.dart';
+import 'package:flexly/services/auth_service.dart';
+import 'package:flexly/pages/privacy_policy_page.dart';
+import 'package:flexly/pages/terms_of_service_page.dart';
 
 class PrivacySecurityPage extends StatefulWidget {
   const PrivacySecurityPage({super.key});
@@ -11,8 +16,10 @@ class PrivacySecurityPage extends StatefulWidget {
 }
 
 class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
+  final _lockService = LockService();
+  final _localAuth = LocalAuthentication();
   bool _biometricUnlock = false;
-  bool _requirePasscode = true;
+  bool _requirePasscode = false;
   bool _analytics = false;
   bool _crashReports = true;
   bool _marketingEmails = false;
@@ -27,7 +34,7 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _biometricUnlock = prefs.getBool('privacy_biometric') ?? false;
-      _requirePasscode = prefs.getBool('privacy_passcode') ?? true;
+      _requirePasscode = prefs.getBool('privacy_passcode') ?? false;
       _analytics = prefs.getBool('privacy_analytics') ?? false;
       _crashReports = prefs.getBool('privacy_crash_reports') ?? true;
       _marketingEmails = prefs.getBool('privacy_marketing_emails') ?? false;
@@ -37,6 +44,116 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
   Future<void> _save(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+  }
+
+  Future<bool> _ensurePasscodeSet() async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString('privacy_passcode_code');
+    if (existing != null && existing.isNotEmpty) return true;
+
+    final controller1 = TextEditingController();
+    final controller2 = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: AppColors.grayDark,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Set passcode', style: AppTextStyles.h3),
+                const SizedBox(height: 6),
+                Text(
+                  'Use 4-8 digits. You\'ll need this if biometrics are unavailable.',
+                  style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
+                ),
+                const SizedBox(height: 16),
+                _styledField(
+                  controller: controller1,
+                  label: 'Passcode',
+                  hint: 'Enter 4-8 digits',
+                ),
+                const SizedBox(height: 12),
+                _styledField(
+                  controller: controller2,
+                  label: 'Confirm passcode',
+                  hint: 'Re-enter passcode',
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    const Spacer(),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      ),
+                      onPressed: () {
+                        final p1 = controller1.text.trim();
+                        final p2 = controller2.text.trim();
+                        if (p1.length < 4 || p1.length > 8) {
+                          _showSnack('Passcode must be 4-8 digits');
+                          return;
+                        }
+                        if (p1 != p2) {
+                          _showSnack('Passcodes do not match');
+                          return;
+                        }
+                        prefs.setString('privacy_passcode_code', p1);
+                        Navigator.pop(context, true);
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  Widget _styledField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.body2.copyWith(color: AppColors.grayLight)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          obscureText: true,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: AppColors.gray,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showSnack(String message) {
@@ -73,7 +190,30 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   icon: Icons.fingerprint,
                   title: 'Biometric unlock',
                   value: _biometricUnlock,
-                  onChanged: (v) {
+                  onChanged: (v) async {
+                    if (v) {
+                      final supported = await _lockService.canUseBiometrics();
+                      if (!supported) {
+                        _showSnack('Biometrics not available or not enrolled');
+                        return;
+                      }
+                      final biometrics = await _localAuth.getAvailableBiometrics();
+                      if (biometrics.isEmpty) {
+                        _showSnack('Enroll fingerprint/face to enable biometrics');
+                        return;
+                      }
+                      final ok = await _localAuth.authenticate(
+                        localizedReason: 'Enable biometric unlock',
+                        options: const AuthenticationOptions(
+                          biometricOnly: true,
+                          stickyAuth: true,
+                        ),
+                      );
+                      if (!ok) {
+                        _showSnack('Biometric check failed');
+                        return;
+                      }
+                    }
                     setState(() => _biometricUnlock = v);
                     _save('privacy_biometric', v);
                     _showSnack(v ? 'Biometric unlock enabled' : 'Biometric unlock disabled');
@@ -84,7 +224,11 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   icon: Icons.shield_outlined,
                   title: 'Require passcode on launch',
                   value: _requirePasscode,
-                  onChanged: (v) {
+                  onChanged: (v) async {
+                    if (v) {
+                      final created = await _ensurePasscodeSet();
+                      if (!created) return;
+                    }
                     setState(() => _requirePasscode = v);
                     _save('privacy_passcode', v);
                     _showSnack(v ? 'Passcode requirement on' : 'Passcode requirement off');
@@ -99,10 +243,24 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   icon: Icons.insights_outlined,
                   title: 'Anonymized analytics',
                   value: _analytics,
-                  onChanged: (v) {
+                  onChanged: (v) async {
                     setState(() => _analytics = v);
                     _save('privacy_analytics', v);
-                    _showSnack(v ? 'Analytics sharing enabled' : 'Analytics sharing disabled');
+                    // When anonymized analytics is ON, hide from social feed (socialHidden = true)
+                    final auth = AuthService();
+                    final resp = await auth.updateProfile({
+                      'socialHidden': v ? 'true' : 'false',
+                    });
+                    if (!(resp['success'] == true)) {
+                      // revert locally on failure
+                      setState(() => _analytics = !v);
+                      _save('privacy_analytics', !v);
+                      _showSnack('Could not update privacy setting');
+                      return;
+                    }
+                    _showSnack(v
+                        ? 'Anonymized mode on – hidden from feed/social'
+                        : 'Anonymized mode off – visible in social');
                   },
                 ),
                 _divider(),
@@ -152,13 +310,23 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                 _actionRow(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
-                  onTap: () => _showSnack('Opening privacy policy'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                    );
+                  },
                 ),
                 _divider(),
                 _actionRow(
                   icon: Icons.article_outlined,
                   title: 'Terms of Service',
-                  onTap: () => _showSnack('Opening terms of service'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TermsOfServicePage()),
+                    );
+                  },
                 ),
               ]),
             ],

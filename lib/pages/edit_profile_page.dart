@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/theme/app_colors.dart';
+import 'package:flexly/services/event_bus.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:flexly/widgets/primary_button.dart';
@@ -26,9 +27,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _heightController;
   late TextEditingController _weightController;
   String? _gender;
+  String? _goal;
   File? _profileImage;
   bool _isLoading = false;
   bool _hasChanges = false;
+
+  final List<_GoalOption> _goalOptions = const [
+    _GoalOption(
+      id: 'gain_muscles',
+      title: 'Gain muscles',
+      subtitle: 'Gain size & strength',
+      icon: Icons.fitness_center,
+    ),
+    _GoalOption(
+      id: 'loose_fat',
+      title: 'Loose fat',
+      subtitle: 'Shred & define',
+      icon: Icons.local_fire_department,
+    ),
+    _GoalOption(
+      id: 'improve_endurance',
+      title: 'Improve endurance',
+      subtitle: 'Boost stamina',
+      icon: Icons.directions_run,
+    ),
+    _GoalOption(
+      id: 'increase_flexibility',
+      title: 'Increase flexibility',
+      subtitle: 'Improve mobility',
+      icon: Icons.accessibility_new,
+    ),
+  ];
 
   @override
   void initState() {
@@ -47,6 +76,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _weightController = TextEditingController(
         text: widget.userData['weight']?.toString() ?? '');
     _gender = widget.userData['gender'];
+    _goal = widget.userData['goal'];
 
     _nameController.addListener(_checkForChanges);
     _usernameController.addListener(_checkForChanges);
@@ -83,6 +113,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final weightChanged =
         _weightController.text != (widget.userData['weight']?.toString() ?? '');
     final genderChanged = _gender != widget.userData['gender'];
+    final goalChanged = _goal != widget.userData['goal'];
     final imageChanged = _profileImage != null;
 
     final hasChanges = nameChanged ||
@@ -93,6 +124,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         heightChanged ||
         weightChanged ||
         genderChanged ||
+        goalChanged ||
         imageChanged;
 
     if (hasChanges != _hasChanges) {
@@ -167,6 +199,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       'height': _heightController.text,
       'weight': _weightController.text,
       'gender': _gender ?? '',
+      if (_goal != null) 'goal': _goal!,
     };
 
     final result = await _authService.updateProfile(updates,
@@ -178,6 +211,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (result['success']) {
       if (mounted) {
+        EventBus().fire(ProfileUpdatedEvent());
         Navigator.pop(context, true); // Return true to indicate update
       }
     } else {
@@ -292,7 +326,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       contentPadding: const EdgeInsets.all(16),
                     ),
-                    items: ['Male', 'Female', 'Other']
+                    items: ['Male', 'Female']
                         .map((label) => DropdownMenuItem(
                               value: label,
                               child: Text(label),
@@ -327,6 +361,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              _buildGoalSelector(),
               const SizedBox(height: 32),
               PrimaryButton(
                 text: _isLoading ? 'Saving...' : 'Save Changes',
@@ -380,4 +416,109 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ],
     );
   }
+
+  Widget _buildGoalSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Goal',
+          style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
+        ),
+        const SizedBox(height: 8),
+        ..._goalOptions.map((goal) {
+          final isSelected = _goal == goal.id;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _goal = goal.id;
+                  _checkForChanges();
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.grayDark,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : AppColors.gray,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.gray,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        goal.icon,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            goal.title,
+                            style: AppTextStyles.h3.copyWith(
+                              color: AppColors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            goal.subtitle,
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.grayLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _GoalOption {
+  final String id;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  const _GoalOption({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
 }

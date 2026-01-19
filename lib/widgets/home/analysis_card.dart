@@ -28,7 +28,7 @@ class AnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.grayDark,
         borderRadius: BorderRadius.circular(24),
@@ -57,7 +57,7 @@ class AnalysisCard extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,6 +66,7 @@ class AnalysisCard extends StatelessWidget {
               'Latest Stats',
               style: AppTextStyles.caption2.copyWith(color: AppColors.white),
             ),
+            const SizedBox(height: 6),
             Text(
               date,
               style: AppTextStyles.small.copyWith(color: AppColors.white),
@@ -74,9 +75,21 @@ class AnalysisCard extends StatelessWidget {
         ),
         GestureDetector(
           onTap: onDetailsTap,
-          child: Text(
-            'See Details',
-            style: AppTextStyles.caption2.copyWith(color: AppColors.primary),
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            children: [
+              Text(
+                'See Details',
+                style:
+                    AppTextStyles.caption2.copyWith(color: AppColors.primary),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: AppColors.primary,
+              ),
+            ],
           ),
         ),
       ],
@@ -85,35 +98,79 @@ class AnalysisCard extends StatelessWidget {
 
   Widget _buildRatingSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            image: imageUrl != null
-                ? DecorationImage(
-                    image: NetworkImage(imageUrl!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
+        GestureDetector(
+          onTap: onDetailsTap,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 220,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  image: imageUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(imageUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                padding: const EdgeInsets.all(20),
+                child: imageUrl == null
+                    ? Center(
+                        child: Icon(
+                          Icons.bar_chart,
+                          size: 72,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : null,
+              ),
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.55),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Open analysis',
+                        style: AppTextStyles.caption2
+                            .copyWith(color: AppColors.white),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.open_in_new,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          // Placeholder for a chart or image
-            child: imageUrl == null
-              ? Center(
-                child: Icon(Icons.bar_chart,
-                  size: 48, color: AppColors.primary),
-              )
-              : null,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
+        Text(
+          'Overall Rating',
+          style: AppTextStyles.small.copyWith(color: AppColors.grayLight),
+        ),
+        const SizedBox(height: 8),
         RichText(
           text: TextSpan(
             children: [
               TextSpan(
                 text: rating.toStringAsFixed(1),
-                style: AppTextStyles.h2,
+                style: AppTextStyles.h1.copyWith(fontSize: 44),
               ),
               TextSpan(
                 text: ' /10',
@@ -179,8 +236,8 @@ class AnalysisCard extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: iconBgColor,
             shape: BoxShape.circle,

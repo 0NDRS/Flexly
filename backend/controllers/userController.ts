@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import User from '../models/User'
 import Analysis from '../models/Analysis'
 import Notification from '../models/Notification'
+import { createAndPushNotification } from './notificationController'
 
 export const getLeaderboard = async (req: Request, res: Response) => {
   try {
@@ -229,7 +230,7 @@ export const followUser = async (req: Request, res: Response) => {
       await currentUser.save()
       await targetUser.save()
 
-      await Notification.create({
+      await createAndPushNotification({
         recipient: targetUserId,
         sender: currentUserId,
         type: 'follow',

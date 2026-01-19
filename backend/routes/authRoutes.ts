@@ -5,6 +5,7 @@ import {
   getMe,
   updateProfile,
   changePassword,
+  googleAuth,
 } from '../controllers/authController'
 import { protect } from '../middleware/authMiddleware'
 import upload from '../middleware/uploadMiddleware'
@@ -25,5 +26,8 @@ router.put('/profile', protect, upload.single('profilePicture'), updateProfile)
 
 // Route to change password (Protected)
 router.put('/password', protect, changePassword)
+
+// Google OAuth exchange
+router.post('/google', googleAuth)
 
 export default router

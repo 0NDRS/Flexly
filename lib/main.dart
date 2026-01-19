@@ -59,6 +59,14 @@ class MyApp extends StatelessWidget {
             labelMedium: AppTextStyles.caption1,
             labelSmall: AppTextStyles.caption2,
           ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: palette.grayDark.withOpacity(0.95),
+        contentTextStyle: AppTextStyles.body2.copyWith(color: palette.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        elevation: 4,
+      ),
     );
   }
 }

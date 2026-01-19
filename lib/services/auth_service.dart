@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flexly/config/api_config.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   static String get baseUrl => '${ApiConfig.baseUrl}/auth';
@@ -191,6 +192,40 @@ class AuthService {
         return {'success': true};
       } else {
         final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message']};
+      }
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email']);
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return {'success': false, 'message': 'Sign in cancelled'};
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        return {'success': false, 'message': 'Missing Google token'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        await _saveToken(data['token']);
+        await _saveUser(data);
+        return {'success': true, 'data': data};
+      } else {
         return {'success': false, 'message': data['message']};
       }
     } catch (e) {

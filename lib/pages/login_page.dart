@@ -6,6 +6,7 @@ import 'package:flexly/pages/home.dart';
 import 'package:flexly/pages/select_plan_page.dart'; // Import SelectPlanPage
 import 'package:flexly/pages/register_page.dart';
 import 'package:flexly/services/auth_service.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // Test login page for testing backend authentication
 
@@ -23,6 +24,32 @@ class _LoginPageState extends State<LoginPage> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+
+  Future<void> _navigateAfterAuth(Map<String, dynamic> userData) async {
+    final hasBodyInfo = userData['gender'] != null &&
+        userData['age'] != null &&
+        userData['height'] != null &&
+        userData['weight'] != null;
+
+    if (!mounted) return;
+
+    if (hasBodyInfo) {
+      if (userData['goal'] != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const SelectPlanPage()),
+        );
+      }
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const BodyInfoPage()),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -47,27 +74,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       if (mounted) {
-        final userData = result['data'];
-        final hasBodyInfo = userData['gender'] != null &&
-            userData['age'] != null &&
-            userData['height'] != null &&
-            userData['weight'] != null;
-
-        if (hasBodyInfo) {
-          if (userData['goal'] != null) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          } else {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const SelectPlanPage()),
-            );
-          }
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const BodyInfoPage()),
-          );
-        }
+        await _navigateAfterAuth(result['data']);
       }
     } else {
       if (mounted) {
@@ -85,6 +92,40 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const RegisterPage()),
     );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    // Ensure old sessions don't auto-pick without consent
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+
+    final result = await _authService.loginWithGoogle();
+
+    if (mounted) {
+      setState(() {
+        _isGoogleLoading = false;
+      });
+    }
+
+    if (result['success']) {
+      if (mounted) {
+        await _navigateAfterAuth(result['data']);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Google sign-in failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -235,9 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     height: 56,
                     child: OutlinedButton(
-                      onPressed: () {
-                        // TODO: Implement Google sign in
-                      },
+                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: AppColors.gray, width: 1),
                         shape: RoundedRectangleBorder(
@@ -247,18 +286,20 @@ class _LoginPageState extends State<LoginPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          if (_isGoogleLoading)
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          if (_isGoogleLoading) const SizedBox(width: 12),
                           Text(
-                            'Continue with ',
+                            'Continue with Google',
                             style: AppTextStyles.body1.copyWith(
                               color: AppColors.grayLight,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'G',
-                            style: AppTextStyles.h3.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],

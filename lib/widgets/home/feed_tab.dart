@@ -226,36 +226,38 @@ class _FeedTabState extends State<FeedTab> {
     final date = DateTime.parse(item['createdAt']);
     final formattedDate = DateFormat.yMMMd().format(date);
 
-    return GestureDetector(
-      onTap: () async {
-        final bodyParts = Map<String, double>.fromEntries(
-          ratings.entries
-              .where((e) => e.key != 'overall')
-              .map((e) => MapEntry(e.key, (e.value as num).toDouble())),
+    Future<void> openDetail() async {
+      final bodyParts = Map<String, double>.fromEntries(
+        ratings.entries
+            .where((e) => e.key != 'overall')
+            .map((e) => MapEntry(e.key, (e.value as num).toDouble())),
+      );
+
+      if (context.mounted) {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AnalysisDetailPage(
+              date: formattedDate,
+              overallRating: overall,
+              bodyPartRatings: bodyParts,
+              adviceTitle: item['adviceTitle'] ?? 'Analysis',
+              adviceDescription: item['advice'] ?? '',
+              imageUrls: imageUrls,
+              isMe: user['_id'] == _currentUserId,
+              analysisId: item['_id'],
+            ),
+          ),
         );
 
-        if (context.mounted) {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AnalysisDetailPage(
-                date: formattedDate,
-                overallRating: overall,
-                bodyPartRatings: bodyParts,
-                adviceTitle: item['adviceTitle'] ?? 'Analysis',
-                adviceDescription: item['advice'] ?? '',
-                imageUrls: imageUrls,
-                isMe: user['_id'] == _currentUserId,
-                analysisId: item['_id'],
-              ),
-            ),
-          );
-
-          if (result == true) {
-            _loadFeed();
-          }
+        if (result == true) {
+          _loadFeed();
         }
-      },
+      }
+    }
+
+    return GestureDetector(
+      onTap: openDetail,
       child: Container(
         margin: const EdgeInsets.only(bottom: 24),
         decoration: BoxDecoration(
@@ -348,15 +350,35 @@ class _FeedTabState extends State<FeedTab> {
             ),
             // Image
             if (firstImage != null)
-              Container(
-                height: 300,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(firstImage),
-                    fit: BoxFit.cover,
+              Stack(
+                children: [
+                  Container(
+                    height: 300,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(firstImage),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Material(
+                      color: Colors.black.withOpacity(0.55),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: openDetail,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.link, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             // Footer
             Padding(

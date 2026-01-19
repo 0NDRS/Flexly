@@ -4,6 +4,7 @@ import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/body_info_page.dart';
 import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/services/auth_service.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // Test register page for testing backend authentication
 
@@ -23,6 +24,26 @@ class _RegisterPageState extends State<RegisterPage> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+
+  Future<void> _navigateAfterAuth(Map<String, dynamic> userData) async {
+    final hasBodyInfo = userData['gender'] != null &&
+        userData['age'] != null &&
+        userData['height'] != null &&
+        userData['weight'] != null;
+
+    if (!mounted) return;
+
+    if (hasBodyInfo) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const BodyInfoPage()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const BodyInfoPage()),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -60,15 +81,46 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (result['success']) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const BodyInfoPage()),
-        );
+        await _navigateAfterAuth(result['data']);
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+
+    final result = await _authService.loginWithGoogle();
+
+    if (mounted) {
+      setState(() {
+        _isGoogleLoading = false;
+      });
+    }
+
+    if (result['success']) {
+      if (mounted) {
+        await _navigateAfterAuth(result['data']);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Google sign-in failed'),
             backgroundColor: Colors.red,
           ),
         );
@@ -264,9 +316,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   SizedBox(
                     height: 56,
                     child: OutlinedButton(
-                      onPressed: () {
-                        // TODO: Implement Google sign in
-                      },
+                      onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: AppColors.gray, width: 1),
                         shape: RoundedRectangleBorder(
@@ -276,18 +326,20 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          if (_isGoogleLoading)
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          if (_isGoogleLoading) const SizedBox(width: 12),
                           Text(
-                            'Continue with ',
+                            'Continue with Google',
                             style: AppTextStyles.body1.copyWith(
                               color: AppColors.grayLight,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'G',
-                            style: AppTextStyles.h3.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],

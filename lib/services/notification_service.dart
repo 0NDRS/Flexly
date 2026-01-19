@@ -43,4 +43,17 @@ class NotificationService {
     }
     // We don't really need to return anything here if it succeeds
   }
+
+  Future<void> registerDeviceToken(String token) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/device-token'),
+      headers: headers,
+      body: jsonEncode({'token': token}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to register device token');
+    }
+  }
 }

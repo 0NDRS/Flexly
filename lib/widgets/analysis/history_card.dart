@@ -50,18 +50,54 @@ class HistoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Image Placeholder
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              image: DecorationImage(
-                image: NetworkImage(imageUrl ?? MockData.placeholderImage),
-                fit: BoxFit.cover,
-                opacity: imageUrl != null ? 1.0 : 0.1,
-              ),
+          // Image with tap-to-open overlay
+          GestureDetector(
+            onTap: onDetailsTap,
+            behavior: HitTestBehavior.opaque,
+            child: Stack(
+              children: [
+                Container(
+                  height: 220,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    image: DecorationImage(
+                      image:
+                          NetworkImage(imageUrl ?? MockData.placeholderImage),
+                      fit: BoxFit.cover,
+                      opacity: imageUrl != null ? 1.0 : 0.08,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Open analysis',
+                          style: AppTextStyles.caption2
+                              .copyWith(color: AppColors.white),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.open_in_new,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),

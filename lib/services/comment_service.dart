@@ -30,12 +30,15 @@ class CommentService {
   }
 
   Future<Map<String, dynamic>> addComment(
-      String analysisId, String text) async {
+      String analysisId, String text, {String? parentCommentId}) async {
     final headers = await _headers();
     final response = await http.post(
       Uri.parse('$baseUrl/$analysisId/comments'),
       headers: headers,
-      body: jsonEncode({'text': text}),
+      body: jsonEncode({
+        'text': text,
+        if (parentCommentId != null) 'parentCommentId': parentCommentId,
+      }),
     );
 
     if (response.statusCode == 201) {

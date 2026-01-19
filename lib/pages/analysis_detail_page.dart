@@ -39,9 +39,14 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
   final _authService = AuthService();
   final TextEditingController _commentController = TextEditingController();
   List<dynamic> _comments = [];
+  Map<String, List<dynamic>> _repliesByParent = {};
+  final Map<String, Map<String, dynamic>> _commentById = {};
+  Map<String, bool> _repliesExpanded = {};
   bool _commentsLoading = false;
   bool _isPosting = false;
   String? _currentUserId;
+  String? _replyToCommentId;
+  String? _replyToUsername;
 
   Future<void> _handleDelete() async {
     if (widget.analysisId == null) return;
@@ -109,7 +114,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
       final data = await _commentService.getComments(widget.analysisId!);
       if (mounted) {
         setState(() {
-          _comments = data;
+          _setThreadedComments(data);
           _commentsLoading = false;
         });
       }
@@ -130,12 +135,22 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
 
     setState(() => _isPosting = true);
     try {
-      final comment = await _commentService.addComment(widget.analysisId!, text);
+      final comment = await _commentService.addComment(
+        widget.analysisId!,
+        text,
+        parentCommentId: _replyToCommentId,
+      );
+      // If API response lacks parent info, attach from current reply target so we thread correctly
+      if (_replyToCommentId != null && (comment['parentComment'] == null)) {
+        comment['parentComment'] = {'_id': _replyToCommentId};
+      }
       if (mounted) {
         setState(() {
-          _comments.insert(0, comment);
+          _insertComment(comment);
           _isPosting = false;
           _commentController.clear();
+          _replyToCommentId = null;
+          _replyToUsername = null;
         });
       }
     } catch (e) {
@@ -148,12 +163,57 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     }
   }
 
+  void _setThreadedComments(List<dynamic> flat) {
+    final previousExpanded = _repliesExpanded;
+    _repliesByParent = {};
+    _comments = [];
+    _commentById.clear();
+    for (final c in flat) {
+      final parent = c['parentComment'];
+      final id = c['_id']?.toString();
+      if (id != null) {
+        _commentById[id] = c as Map<String, dynamic>;
+      }
+      if (parent == null) {
+        _comments.add(c);
+      } else {
+        final parentId = parent is Map ? parent['_id'] : parent.toString();
+        _repliesByParent.putIfAbsent(parentId, () => []).add(c);
+      }
+    }
+    _repliesExpanded = {};
+    _repliesByParent.forEach((key, value) {
+      _repliesExpanded[key] = previousExpanded[key] ?? false;
+    });
+  }
+
+  void _insertComment(Map<String, dynamic> comment) {
+    final parent = comment['parentComment'];
+    final id = comment['_id']?.toString();
+    if (id != null) {
+      _commentById[id] = comment;
+    }
+    if (parent == null) {
+      _comments.insert(0, comment);
+      return;
+    }
+    final parentId = parent is Map ? parent['_id'] : parent.toString();
+    _repliesByParent.putIfAbsent(parentId, () => []).insert(0, comment);
+    _repliesExpanded[parentId] = true;
+  }
+
   Future<void> _deleteComment(String commentId) async {
     try {
       await _commentService.deleteComment(commentId);
       if (mounted) {
         setState(() {
           _comments.removeWhere((c) => c['_id'] == commentId);
+          _repliesByParent.remove(commentId);
+          _repliesByParent.forEach((key, list) {
+            list.removeWhere((c) => c['_id'] == commentId);
+          });
+          _repliesExpanded.remove(commentId);
+          _commentById.remove(commentId);
         });
       }
     } catch (e) {
@@ -500,33 +560,70 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.gray, width: 1),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  style: AppTextStyles.body2.copyWith(color: AppColors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Add a comment...',
-                    hintStyle: TextStyle(color: AppColors.grayLight),
-                    border: InputBorder.none,
+              if (_replyToCommentId != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.gray.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  minLines: 1,
-                  maxLines: 4,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Replying to ${_replyToUsername ?? 'comment'}',
+                        style: AppTextStyles.caption1
+                            .copyWith(color: AppColors.white),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _replyToCommentId = null;
+                            _replyToUsername = null;
+                          });
+                        },
+                        child: Icon(Icons.close,
+                            size: 16, color: AppColors.grayLight),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: _isPosting
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.white,
-                        ),
-                      )
-                    : Icon(Icons.send, color: AppColors.primary),
-                onPressed: _isPosting ? null : _submitComment,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      style: AppTextStyles.body2.copyWith(color: AppColors.white),
+                      decoration: InputDecoration(
+                        hintText:
+                            _replyToCommentId != null ? 'Write a reply...' : 'Add a comment...',
+                        hintStyle: TextStyle(color: AppColors.grayLight),
+                        border: InputBorder.none,
+                      ),
+                      minLines: 1,
+                      maxLines: 4,
+                    ),
+                  ),
+                  IconButton(
+                    icon: _isPosting
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.white,
+                            ),
+                          )
+                        : Icon(Icons.send, color: AppColors.primary),
+                    onPressed: _isPosting ? null : _submitComment,
+                  ),
+                ],
               ),
             ],
           ),
@@ -543,80 +640,181 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
             style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
           )
         else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _comments.length,
-            separatorBuilder: (_, __) => Divider(color: AppColors.gray),
-            itemBuilder: (context, index) {
-              final comment = _comments[index];
-              final user = comment['user'] ?? {};
-              final createdAt = comment['createdAt'] != null
-                  ? DateTime.parse(comment['createdAt'])
-                  : DateTime.now();
-              final canDelete =
-                  _currentUserId != null && user['_id'] == _currentUserId;
+          _buildThreadedComments(),
+      ],
+    );
+  }
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.gray,
-                    backgroundImage: user['profilePicture'] != null &&
-                            (user['profilePicture'] as String).isNotEmpty
-                        ? NetworkImage(user['profilePicture'])
-                        : null,
-                    child: user['profilePicture'] == null ||
-                            (user['profilePicture'] as String).isEmpty
-                        ? Icon(Icons.person,
-                          color: AppColors.grayLight, size: 18)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              user['username'] != null
-                                  ? '@${user['username']}'
-                                  : (user['name'] ?? 'User'),
-                              style: AppTextStyles.body2.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _timeAgo(createdAt),
-                              style: AppTextStyles.caption2
-                                  .copyWith(color: AppColors.grayLight),
-                            ),
-                          ],
+  Widget _buildThreadedComments() {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _comments.length,
+      separatorBuilder: (_, __) => Divider(color: AppColors.gray),
+      itemBuilder: (context, index) {
+        final comment = _comments[index];
+        return _buildCommentTile(comment, isReply: false, depth: 0);
+      },
+    );
+  }
+
+  Widget _buildCommentTile(Map<String, dynamic> comment,
+      {required bool isReply, required int depth}) {
+    final user = comment['user'] ?? {};
+    final createdAt = comment['createdAt'] != null
+        ? DateTime.parse(comment['createdAt'])
+        : DateTime.now();
+    final canDelete = _currentUserId != null && user['_id'] == _currentUserId;
+    final commentId = comment['_id']?.toString() ?? '';
+    final replies = _repliesByParent[commentId] ?? [];
+    final replyCount = replies.length;
+    final expanded = _repliesExpanded[commentId] ?? false;
+    // Only indent first-level replies; deeper replies stay aligned under the first reply
+    final indent = depth == 1 ? 28.0 : 0.0;
+    final parent = comment['parentComment'];
+    String? parentUserLabel;
+    if (parent != null) {
+      final parentId = parent is Map ? parent['_id'] : parent.toString();
+      final parentComment = _commentById[parentId];
+      if (parentComment != null) {
+        final pu = parentComment['user'] ?? {};
+        parentUserLabel = pu['username'] != null
+            ? '@${pu['username']}'
+            : (pu['name'] ?? 'user');
+      }
+    }
+
+    return Container(
+      margin: EdgeInsets.only(left: indent, top: isReply ? 8 : 0),
+      padding: const EdgeInsets.only(
+        left: 0,
+        right: 4,
+        top: 6,
+        bottom: 6,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: isReply ? 16 : 18,
+                backgroundColor: AppColors.gray,
+                backgroundImage: user['profilePicture'] != null &&
+                        (user['profilePicture'] as String).isNotEmpty
+                    ? NetworkImage(user['profilePicture'])
+                    : null,
+                child: user['profilePicture'] == null ||
+                        (user['profilePicture'] as String).isEmpty
+                    ? Icon(Icons.person,
+                        color: AppColors.grayLight, size: isReply ? 16 : 18)
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isReply && parentUserLabel != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          'Replying to $parentUserLabel',
+                          style: AppTextStyles.caption1
+                              .copyWith(color: AppColors.grayLight),
                         ),
-                        const SizedBox(height: 4),
+                      ),
+                    Row(
+                      children: [
                         Text(
-                          comment['text'] ?? '',
-                          style:
-                              AppTextStyles.body2.copyWith(color: AppColors.white),
+                          user['username'] != null
+                              ? '@${user['username']}'
+                              : (user['name'] ?? 'User'),
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _timeAgo(createdAt),
+                          style: AppTextStyles.caption2
+                              .copyWith(color: AppColors.grayLight),
                         ),
                       ],
                     ),
-                  ),
-                  if (canDelete)
-                    IconButton(
-                      icon: Icon(Icons.delete_outline,
-                          size: 18, color: AppColors.grayLight),
-                      onPressed: () => _deleteComment(comment['_id']),
+                    const SizedBox(height: 4),
+                    Text(
+                      comment['text'] ?? '',
+                      style:
+                          AppTextStyles.body2.copyWith(color: AppColors.white),
                     ),
-                ],
-              );
-            },
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _replyToCommentId = commentId;
+                              _replyToUsername = user['username'] ?? user['name'];
+                            });
+                          },
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          child: Text('Reply',
+                              style: AppTextStyles.caption1
+                                  .copyWith(color: AppColors.grayLight)),
+                        ),
+                        if (canDelete)
+                          TextButton(
+                            onPressed: () => _deleteComment(commentId),
+                            style: TextButton.styleFrom(
+                                padding: const EdgeInsets.only(left: 12)),
+                            child: Text('Delete',
+                                style: AppTextStyles.caption1
+                                    .copyWith(color: AppColors.grayLight)),
+                          ),
+                      ],
+                    ),
+                    if (replyCount > 0)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _repliesExpanded[commentId] = !expanded;
+                          });
+                        },
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                        child: Text(
+                          expanded
+                              ? 'Hide replies ($replyCount)'
+                              : 'Show replies ($replyCount)',
+                          style: AppTextStyles.caption1
+                              .copyWith(color: AppColors.grayLight),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-      ],
+          if (expanded && replies.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(left: depth == 0 ? 28 : 0, top: 6),
+              child: Column(
+                children: replies
+                    .map((r) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildCommentTile(
+                            Map<String, dynamic>.from(r as Map),
+                            isReply: true,
+                            depth: depth + 1,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

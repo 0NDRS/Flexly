@@ -4,6 +4,7 @@ import User from '../models/User'
 import Analysis from '../models/Analysis'
 import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
+import { OAuth2Client } from 'google-auth-library'
 
 const generateToken = (id: string) => {
   if (!process.env.JWT_SECRET) {
@@ -12,6 +13,32 @@ const generateToken = (id: string) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   })
+}
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null
+
+const buildAuthResponse = (user: any) => {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    username: user.username,
+    bio: user.bio,
+    gender: user.gender,
+    age: user.age,
+    height: user.height,
+    weight: user.weight,
+    goal: user.goal,
+    profilePicture: user.profilePicture,
+    followers: user.followers,
+    following: user.following,
+    score: user.score,
+    streak: user.streak,
+    analyticsTracked: user.analyticsTracked,
+    socialHidden: user.socialHidden,
+    token: generateToken(user._id.toString()),
+  }
 }
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -40,25 +67,7 @@ export const registerUser = async (req: Request, res: Response) => {
     })
 
     if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        bio: user.bio,
-        gender: user.gender,
-        age: user.age,
-        height: user.height,
-        weight: user.weight,
-        goal: user.goal,
-        profilePicture: user.profilePicture,
-        followers: user.followers,
-        following: user.following,
-        score: user.score,
-        streak: user.streak,
-        analyticsTracked: user.analyticsTracked,
-        token: generateToken(user._id.toString()),
-      })
+      res.status(201).json(buildAuthResponse(user))
     } else {
       res.status(400).json({ message: 'Invalid user data' })
     }
@@ -74,25 +83,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const user = await User.findOne({ email }).select('+password')
 
     if (user && (await (user as any).matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        bio: user.bio,
-        gender: user.gender,
-        age: user.age,
-        height: user.height,
-        weight: user.weight,
-        goal: user.goal,
-        profilePicture: user.profilePicture,
-        followers: user.followers,
-        following: user.following,
-        score: user.score,
-        streak: user.streak,
-        analyticsTracked: user.analyticsTracked,
-        token: generateToken(user._id.toString()),
-      })
+      res.json(buildAuthResponse(user))
     } else {
       res.status(401).json({ message: 'Invalid email or password' })
     }
@@ -250,6 +241,10 @@ export const updateProfile = async (req: Request, res: Response) => {
       if (req.body.weight) user.weight = Number(req.body.weight)
       if (req.body.goal) user.goal = req.body.goal
 
+      if (typeof req.body.socialHidden !== 'undefined') {
+        user.socialHidden = req.body.socialHidden === true || req.body.socialHidden === 'true'
+      }
+
       if (req.body.password) {
         user.password = req.body.password
       }
@@ -298,11 +293,67 @@ export const updateProfile = async (req: Request, res: Response) => {
         score: updatedUser.score,
         streak: updatedUser.streak,
         analyticsTracked: updatedUser.analyticsTracked,
+        socialHidden: updatedUser.socialHidden,
         token: generateToken(updatedUser._id.toString()),
       })
     } else {
       res.status(404).json({ message: 'User not found' })
     }
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+export const googleAuth = async (req: Request, res: Response) => {
+  try {
+    const { idToken } = req.body as { idToken?: string }
+    if (!idToken) {
+      res.status(400).json({ message: 'idToken is required' })
+      return
+    }
+    if (!googleClient) {
+      res.status(500).json({ message: 'GOOGLE_CLIENT_ID not configured' })
+      return
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: googleClientId,
+    })
+
+    const payload = ticket.getPayload()
+    if (!payload || !payload.email) {
+      res.status(400).json({ message: 'Invalid Google token' })
+      return
+    }
+
+    const email = payload.email
+    const name = payload.name || email.split('@')[0]
+    const picture = payload.picture
+
+    let user = await User.findOne({ email })
+
+    if (!user) {
+      // Build a unique username
+      const base = name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'user'
+      let username = base
+      let attempt = 0
+      while (await User.findOne({ username })) {
+        username = `${base}${Math.floor(1000 + Math.random() * 9000)}`
+        attempt++
+        if (attempt > 5) break
+      }
+
+      user = await User.create({
+        name,
+        email,
+        username,
+        password: `${payload.sub || 'google'}-${Date.now()}`,
+        profilePicture: picture || '',
+      })
+    }
+
+    res.json(buildAuthResponse(user))
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })
   }

@@ -32,7 +32,7 @@ class AppPalette {
   const AppPalette.dark()
       : primary = const Color(0xFFEE0003),
         white = const Color(0xFFFFFFFF),
-        grayLight = const Color(0xFF5F5F5F),
+        grayLight = const Color(0xFFC9C9C9),
         grayDark = const Color(0xFF191919),
         gray = const Color(0xFF2E2E2E),
         background = const Color(0xFF080808),

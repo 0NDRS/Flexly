@@ -7,6 +7,7 @@ import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/pages/edit_profile_page.dart';
 import 'package:flexly/pages/change_password_page.dart';
 import 'package:flexly/pages/privacy_security_page.dart';
+import 'package:flexly/pages/terms_of_service_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flexly/services/event_bus.dart';
 
@@ -211,7 +212,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   _buildSettingItem(
                     icon: Icons.description_outlined,
                     title: 'Terms of service',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsOfServicePage(),
+                        ),
+                      );
+                    },
                   ),
                 ]),
                 const SizedBox(height: 32),

@@ -51,6 +51,8 @@
 		<string>We need access to your camera to analyze your physique.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>We need access to your microphone for video analysis.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Use Face ID to unlock the app.</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>

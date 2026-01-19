@@ -391,6 +391,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           analysis['advice'] ?? '',
                                       imageUrls: imageUrls,
                                       isMe: false,
+                                      analysisId: analysis['_id'],
                                     ),
                                   ),
                                 );

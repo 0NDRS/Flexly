@@ -37,3 +37,5 @@ class UnitsPreferenceChangedEvent {
   final String units;
   UnitsPreferenceChangedEvent(this.units);
 }
+
+class ProfileUpdatedEvent {}

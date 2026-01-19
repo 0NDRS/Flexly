@@ -46,6 +46,9 @@ class _HomeHeaderState extends State<HomeHeader> {
           });
         }
       }
+      if (event is ProfileUpdatedEvent) {
+        _loadUserData();
+      }
     });
   }
 

@@ -8,6 +8,7 @@ export const getCommentsForAnalysis = async (req: Request, res: Response) => {
     const comments = await Comment.find({ analysis: analysisId })
       .sort({ createdAt: -1 })
       .populate('user', 'name username profilePicture')
+      .populate('parentComment', '_id')
 
     res.json(comments)
   } catch (error) {
@@ -19,7 +20,10 @@ export const addCommentToAnalysis = async (req: Request, res: Response) => {
   try {
     const analysisId = req.params.id
     const userId = (req as any).user?._id
-    const { text } = req.body as { text?: string }
+    const { text, parentCommentId } = req.body as {
+      text?: string
+      parentCommentId?: string
+    }
 
     if (!text || text.trim().length === 0) {
       res.status(400).json({ message: 'Comment text is required' })
@@ -32,14 +36,31 @@ export const addCommentToAnalysis = async (req: Request, res: Response) => {
       return
     }
 
+    // If replying, ensure the parent exists and belongs to the same analysis
+    let parentComment = null
+    if (parentCommentId) {
+      parentComment = await Comment.findById(parentCommentId)
+      if (!parentComment) {
+        res.status(404).json({ message: 'Parent comment not found' })
+        return
+      }
+      if (parentComment.analysis.toString() !== analysisId.toString()) {
+        res.status(400).json({ message: 'Parent comment does not belong to this analysis' })
+        return
+      }
+    }
+
     const comment = await Comment.create({
       analysis: analysisId,
       user: userId,
       text: text.trim(),
+      parentComment: parentComment ? parentComment._id : undefined,
     })
 
-    const populated = await comment.populate('user', 'name username profilePicture')
-    res.status(201).json(populated)
+    await comment.populate('user', 'name username profilePicture')
+    await comment.populate('parentComment', '_id')
+
+    res.status(201).json(comment)
   } catch (error) {
     res.status(500).json({ message: 'Server error' })
   }

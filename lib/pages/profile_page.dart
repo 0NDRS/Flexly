@@ -584,7 +584,7 @@ class _ProfilePageState extends State<ProfilePage> {
       style: OutlinedButton.styleFrom(
         backgroundColor: AppColors.grayDark,
         side: BorderSide(color: AppColors.grayLight, width: 1.5),
-        padding: const EdgeInsets.symmetric(vertical: 28),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),

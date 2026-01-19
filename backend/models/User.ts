@@ -74,6 +74,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  socialHidden: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  deviceTokens: {
+    type: [String],
+    default: [],
+  },
   nameChangedAt: {
     type: Date,
   },

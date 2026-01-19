@@ -252,9 +252,14 @@ export const getAnalyses = async (req: Request, res: Response) => {
 export const getAnalysesByUserId = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId
-    const analyses = await Analysis.find({ user: userId }).sort({
-      createdAt: -1,
-    })
+    const requesterId = (req as any).user?._id?.toString()
+    const targetUser = await User.findById(userId)
+    if (targetUser && targetUser.socialHidden && requesterId !== userId) {
+      res.status(403).json({ message: 'User has hidden social activity' })
+      return
+    }
+
+    const analyses = await Analysis.find({ user: userId }).sort({ createdAt: -1 })
     res.json(analyses)
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })
@@ -279,7 +284,14 @@ export const getFeed = async (req: Request, res: Response) => {
       return
     }
 
-    const analyses = await Analysis.find({ user: { $in: followingIds } })
+    const visibleFollowing = await User.find({
+      _id: { $in: followingIds },
+      socialHidden: { $ne: true },
+    }).select('_id')
+
+    const visibleIds = visibleFollowing.map((u) => u._id)
+
+    const analyses = await Analysis.find({ user: { $in: visibleIds } })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
