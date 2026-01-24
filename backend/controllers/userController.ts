@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import User from '../models/User'
 import Analysis from '../models/Analysis'
 import Notification from '../models/Notification'
+import Comment from '../models/Comment'
 import { createAndPushNotification } from './notificationController'
 
 export const getLeaderboard = async (req: Request, res: Response) => {
@@ -179,6 +180,48 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 }
 
+// @desc    Get user followers
+// @route   GET /api/users/:id/followers
+// @access  Private
+export const getFollowers = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id).populate(
+      'followersList',
+      'name username profilePicture'
+    )
+    if (!user) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+    const followers = (user as any).followersList || []
+    res.json(followers)
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+// @desc    Get user following
+// @route   GET /api/users/:id/following
+// @access  Private
+export const getFollowing = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id).populate(
+      'followingList',
+      'name username profilePicture'
+    )
+    if (!user) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+    const following = (user as any).followingList || []
+    res.json(following)
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message })
+  }
+}
+
+// @desc    Follow/Unfollow user
+// @route   POST /api/users/:id/follow
 export const followUser = async (req: Request, res: Response) => {
   try {
     const targetUserId = req.params.id
@@ -270,6 +313,68 @@ export const searchUsers = async (req: Request, res: Response) => {
     res.json(users)
   } catch (error) {
     console.error('Search Users Error:', error)
+    res.status(500).json({ message: 'Server error' })
+  }
+}
+
+// @desc    Delete user account and all data
+// @route   DELETE /api/users/me
+// @access  Private
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user._id
+    const user = await User.findById(userId)
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+
+    // 1. Find all analyses by this user to get their IDs
+    const analyses = await Analysis.find({ user: userId })
+    const analysisIds = analyses.map((a) => a._id)
+
+    // 2. Delete all comments by the user
+    await Comment.deleteMany({ user: userId })
+
+    // 3. Delete all comments on user's analyses
+    if (analysisIds.length > 0) {
+      await Comment.deleteMany({ analysis: { $in: analysisIds } })
+    }
+
+    // 4. Delete notifications (sent to user or sent by user)
+    await Notification.deleteMany({
+      $or: [{ recipient: userId }, { sender: userId }],
+    })
+
+    // 5. Remove user from others' following/followers lists
+    // Remove user from followingList of people who follow this user
+    await User.updateMany(
+      { followingList: userId },
+      {
+        $pull: { followingList: userId },
+        $inc: { following: -1 },
+      }
+    )
+
+    // Remove user from followersList of people this user follows
+    await User.updateMany(
+      { followersList: userId },
+      {
+        $pull: { followersList: userId },
+        $inc: { followers: -1 },
+      }
+    )
+
+    // 6. Delete all analyses
+    await Analysis.deleteMany({ user: userId })
+
+    // 7. Delete the user
+    await User.findByIdAndDelete(userId)
+
+    res.json({ message: 'Account deleted successfully' })
+  } catch (error) {
+    console.error('Delete User Error:', error)
     res.status(500).json({ message: 'Server error' })
   }
 }

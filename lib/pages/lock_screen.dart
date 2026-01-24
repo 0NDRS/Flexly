@@ -105,7 +105,6 @@ class _LockScreenState extends State<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
@@ -189,7 +188,8 @@ class _LockScreenState extends State<LockScreen> {
                     if (_error.isNotEmpty)
                       Text(
                         _error,
-                        style: AppTextStyles.caption1.copyWith(color: Colors.redAccent),
+                        style: AppTextStyles.caption1
+                            .copyWith(color: Colors.redAccent),
                       ),
                   ],
                 ),
@@ -267,8 +267,7 @@ class _LockScreenState extends State<LockScreen> {
             ? const Icon(Icons.backspace_outlined, color: Colors.white)
             : (icon != null
                 ? Icon(icon,
-                    color: enabled ? Colors.white : AppColors.gray,
-                    size: 28)
+                    color: enabled ? Colors.white : AppColors.gray, size: 28)
                 : Text(
                     digit,
                     style: AppTextStyles.h1.copyWith(

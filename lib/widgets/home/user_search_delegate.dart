@@ -111,14 +111,14 @@ class UserSearchDelegate extends SearchDelegate {
               final user = users[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.gray,
+                  backgroundColor: AppColors.grayLight,
                   backgroundImage: user['profilePicture'] != null &&
                           user['profilePicture'].isNotEmpty
                       ? NetworkImage(user['profilePicture'])
                       : null,
                   child: user['profilePicture'] == null ||
                           user['profilePicture'].isEmpty
-                      ? Icon(Icons.person, color: AppColors.grayLight)
+                      ? const Icon(Icons.person, color: Colors.white)
                       : null,
                 ),
                 title: Text(

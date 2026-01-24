@@ -55,8 +55,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.backgroundDark,
-        title: Text('Delete Analysis?',
-            style: TextStyle(color: AppColors.white)),
+        title:
+            Text('Delete Analysis?', style: TextStyle(color: AppColors.white)),
         content: Text(
           'Are you sure you want to delete this analysis? This action cannot be undone.',
           style: TextStyle(color: AppColors.grayLight),
@@ -599,10 +599,12 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                   Expanded(
                     child: TextField(
                       controller: _commentController,
-                      style: AppTextStyles.body2.copyWith(color: AppColors.white),
+                      style:
+                          AppTextStyles.body2.copyWith(color: AppColors.white),
                       decoration: InputDecoration(
-                        hintText:
-                            _replyToCommentId != null ? 'Write a reply...' : 'Add a comment...',
+                        hintText: _replyToCommentId != null
+                            ? 'Write a reply...'
+                            : 'Add a comment...',
                         hintStyle: TextStyle(color: AppColors.grayLight),
                         border: InputBorder.none,
                       ),
@@ -631,8 +633,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         const SizedBox(height: 16),
         if (_commentsLoading)
           Center(
-            child:
-                CircularProgressIndicator(color: AppColors.white, strokeWidth: 2),
+            child: CircularProgressIndicator(
+                color: AppColors.white, strokeWidth: 2),
           )
         else if (_comments.isEmpty)
           Text(
@@ -700,7 +702,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
             children: [
               CircleAvatar(
                 radius: isReply ? 16 : 18,
-                backgroundColor: AppColors.gray,
+                backgroundColor: AppColors.grayLight,
                 backgroundImage: user['profilePicture'] != null &&
                         (user['profilePicture'] as String).isNotEmpty
                     ? NetworkImage(user['profilePicture'])
@@ -708,7 +710,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                 child: user['profilePicture'] == null ||
                         (user['profilePicture'] as String).isEmpty
                     ? Icon(Icons.person,
-                        color: AppColors.grayLight, size: isReply ? 16 : 18)
+                        color: Colors.white, size: isReply ? 16 : 18)
                     : null,
               ),
               const SizedBox(width: 12),
@@ -757,7 +759,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                           onPressed: () {
                             setState(() {
                               _replyToCommentId = commentId;
-                              _replyToUsername = user['username'] ?? user['name'];
+                              _replyToUsername =
+                                  user['username'] ?? user['name'];
                             });
                           },
                           style: TextButton.styleFrom(padding: EdgeInsets.zero),

@@ -6,8 +6,6 @@ import 'package:flexly/pages/analysis_page.dart';
 import 'package:flexly/pages/statistics_page.dart';
 import 'package:flexly/pages/profile_page.dart';
 import 'package:flexly/pages/lock_screen.dart';
-import 'package:flexly/theme/app_colors.dart';
-import 'package:flexly/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -71,6 +69,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final biometricOn = prefs.getBool('privacy_biometric') ?? false;
 
     if (!requirePasscode && !biometricOn) return;
+
+    if (!mounted) return;
 
     _lockShowing = true;
 

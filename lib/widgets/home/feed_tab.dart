@@ -161,7 +161,7 @@ class _FeedTabState extends State<FeedTab> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    Icon(Icons.group_outlined,
+                  Icon(Icons.group_outlined,
                       size: 64, color: AppColors.grayLight),
                   const SizedBox(height: 16),
                   Text(
@@ -292,15 +292,15 @@ class _FeedTabState extends State<FeedTab> {
                     },
                     child: CircleAvatar(
                       radius: 20,
-                      backgroundColor: AppColors.gray,
+                      backgroundColor: AppColors.grayLight,
                       backgroundImage: user['profilePicture'] != null &&
                               user['profilePicture'].isNotEmpty
                           ? NetworkImage(user['profilePicture'])
                           : null,
                       child: user['profilePicture'] == null ||
                               user['profilePicture'].isEmpty
-                          ? Icon(Icons.person,
-                            color: AppColors.grayLight, size: 20)
+                          ? const Icon(Icons.person,
+                              color: Colors.white, size: 20)
                           : null,
                     ),
                   ),
@@ -332,8 +332,7 @@ class _FeedTabState extends State<FeedTab> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.star,
-                          size: 14, color: AppColors.primary),
+                        Icon(Icons.star, size: 14, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
                           overall.toStringAsFixed(1),
@@ -366,14 +365,15 @@ class _FeedTabState extends State<FeedTab> {
                     top: 12,
                     right: 12,
                     child: Material(
-                      color: Colors.black.withOpacity(0.55),
+                      color: Colors.black.withValues(alpha: 0.55),
                       shape: const CircleBorder(),
                       child: InkWell(
                         customBorder: const CircleBorder(),
                         onTap: openDetail,
                         child: const Padding(
                           padding: EdgeInsets.all(10),
-                          child: Icon(Icons.link, color: Colors.white, size: 18),
+                          child:
+                              Icon(Icons.link, color: Colors.white, size: 18),
                         ),
                       ),
                     ),

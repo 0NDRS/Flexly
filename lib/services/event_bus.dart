@@ -33,6 +33,11 @@ class AnalysisDeletedEvent {
   AnalysisDeletedEvent(this.analysisId);
 }
 
+class AnalysisCreatedEvent {
+  final Map<String, dynamic> analysis;
+  AnalysisCreatedEvent(this.analysis);
+}
+
 class UnitsPreferenceChangedEvent {
   final String units;
   UnitsPreferenceChangedEvent(this.units);

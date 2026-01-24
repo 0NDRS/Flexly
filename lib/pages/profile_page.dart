@@ -12,6 +12,7 @@ import 'package:flexly/services/event_bus.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/utils/unit_utils.dart';
+import 'package:flexly/pages/follow_list_page.dart';
 import 'package:flexly/widgets/home/home_header.dart';
 import 'package:intl/intl.dart';
 
@@ -39,7 +40,9 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData();
     _loadUnitPreference();
     _eventSubscription = EventBus().stream.listen((event) {
-      if (event is AnalysisDeletedEvent || event is UserFollowEvent) {
+      if (event is AnalysisDeletedEvent ||
+          event is UserFollowEvent ||
+          event is AnalysisCreatedEvent) {
         _loadUserData();
       }
       if (event is UnitsPreferenceChangedEvent) {
@@ -90,19 +93,6 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _unitSystem = preference;
       });
-    }
-  }
-
-  Future<void> _goToEditProfile() async {
-    if (_userData == null) return;
-    final updated = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditProfilePage(userData: _userData!),
-      ),
-    );
-    if (updated == true) {
-      await _loadUserData();
     }
   }
 
@@ -194,8 +184,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 image: _userData?['profilePicture'] != null &&
                                         _userData!['profilePicture'] != ''
                                     ? DecorationImage(
-                                        image:
-                                            NetworkImage(_userData!['profilePicture']),
+                                        image: NetworkImage(
+                                            _userData!['profilePicture']),
                                         fit: BoxFit.cover,
                                       )
                                     : null,
@@ -265,14 +255,46 @@ class _ProfilePageState extends State<ProfilePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildStatColumn(
-                              'Followers', '${_userData?['followers'] ?? 0}'),
+                            'Followers',
+                            '${_userData?['followers'] ?? 0}',
+                            onTap: () {
+                              if (_userData != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => FollowListPage(
+                                      userId:
+                                          _userData!['id'] ?? _userData!['_id'],
+                                      initialType: FollowListType.followers,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           Container(
                             width: 1,
                             height: 40,
                             color: AppColors.grayDark,
                           ),
                           _buildStatColumn(
-                              'Following', '${_userData?['following'] ?? 0}'),
+                            'Following',
+                            '${_userData?['following'] ?? 0}',
+                            onTap: () {
+                              if (_userData != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => FollowListPage(
+                                      userId:
+                                          _userData!['id'] ?? _userData!['_id'],
+                                      initialType: FollowListType.following,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           Container(
                             width: 1,
                             height: 40,
@@ -297,11 +319,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           _buildStatColumn(
                               'Height',
                               UnitUtils.formatHeight(
-                                _userData?['height'], _unitSystem)),
-                            _buildStatColumn(
+                                  _userData?['height'], _unitSystem)),
+                          _buildStatColumn(
                               'Weight',
                               UnitUtils.formatWeight(
-                                _userData?['weight'], _unitSystem)),
+                                  _userData?['weight'], _unitSystem)),
                         ],
                       ),
                     ],
@@ -472,7 +494,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                            Icon(Icons.star,
+                                          Icon(Icons.star,
                                               size: 10,
                                               color: AppColors.primary),
                                           const SizedBox(width: 4),
@@ -610,26 +632,30 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatColumn(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.body2.copyWith(
-            color: AppColors.grayLight,
-            fontSize: 11,
+  Widget _buildStatColumn(String label, String value, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.body2.copyWith(
+              color: AppColors.grayLight,
+              fontSize: 11,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTextStyles.h3.copyWith(
-            color: AppColors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTextStyles.h3.copyWith(
+              color: AppColors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

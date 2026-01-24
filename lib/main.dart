@@ -6,7 +6,6 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flexly/services/event_bus.dart';
 
 enum StartTarget { loading, splash, login, home }
 
@@ -42,11 +41,12 @@ class MyApp extends StatelessWidget {
     final base = isDark ? ThemeData.dark() : ThemeData.light();
 
     return base.copyWith(
-      useMaterial3: true,
       scaffoldBackgroundColor: palette.background,
       colorScheme: (isDark
-              ? ColorScheme.dark(primary: palette.primary, surface: palette.background)
-              : ColorScheme.light(primary: palette.primary, surface: palette.background))
+              ? ColorScheme.dark(
+                  primary: palette.primary, surface: palette.background)
+              : ColorScheme.light(
+                  primary: palette.primary, surface: palette.background))
           .copyWith(onSurface: palette.white),
       textTheme: base.textTheme
           .apply(bodyColor: palette.white, displayColor: palette.white)
@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
           ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: palette.grayDark.withOpacity(0.95),
+        backgroundColor: palette.grayDark.withValues(alpha: 0.95),
         contentTextStyle: AppTextStyles.body2.copyWith(color: palette.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

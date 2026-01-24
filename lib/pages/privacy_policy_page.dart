@@ -19,12 +19,12 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: Text('Privacy Policy', style: AppTextStyles.h3),
         centerTitle: true,
       ),
-      body: SafeArea(
+      body: const SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               _Header(text: 'Last updated: Jan 19, 2026'),
               _Section(
                 title: 'Overview',
@@ -127,7 +127,8 @@ class _Section extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.h2.copyWith(fontSize: 20, color: AppColors.white),
+            style:
+                AppTextStyles.h2.copyWith(fontSize: 20, color: AppColors.white),
           ),
           const SizedBox(height: 8),
           if (body != null)
@@ -135,23 +136,27 @@ class _Section extends StatelessWidget {
               body!,
               style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
             ),
-          if (bullets != null) ...bullets!.map(
-            (b) => Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('• ', style: AppTextStyles.body2.copyWith(color: AppColors.grayLight)),
-                  Expanded(
-                    child: Text(
-                      b,
-                      style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
+          if (bullets != null)
+            ...bullets!.map(
+              (b) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('• ',
+                        style: AppTextStyles.body2
+                            .copyWith(color: AppColors.grayLight)),
+                    Expanded(
+                      child: Text(
+                        b,
+                        style: AppTextStyles.body2
+                            .copyWith(color: AppColors.grayLight),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

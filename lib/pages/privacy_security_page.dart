@@ -51,6 +51,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     final existing = prefs.getString('privacy_passcode_code');
     if (existing != null && existing.isNotEmpty) return true;
 
+    if (!mounted) return false;
+
     final controller1 = TextEditingController();
     final controller2 = TextEditingController();
     final result = await showDialog<bool>(
@@ -59,7 +61,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
       builder: (context) {
         return Dialog(
           backgroundColor: AppColors.grayDark,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
             child: Column(
@@ -70,7 +73,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                 const SizedBox(height: 6),
                 Text(
                   'Use 4-8 digits. You\'ll need this if biometrics are unavailable.',
-                  style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
+                  style:
+                      AppTextStyles.body2.copyWith(color: AppColors.grayLight),
                 ),
                 const SizedBox(height: 16),
                 _styledField(
@@ -96,8 +100,10 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
                       ),
                       onPressed: () {
                         final p1 = controller1.text.trim();
@@ -135,7 +141,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.body2.copyWith(color: AppColors.grayLight)),
+        Text(label,
+            style: AppTextStyles.body2.copyWith(color: AppColors.grayLight)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -145,7 +152,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
             hintText: hint,
             filled: true,
             fillColor: AppColors.gray,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -197,9 +205,11 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                         _showSnack('Biometrics not available or not enrolled');
                         return;
                       }
-                      final biometrics = await _localAuth.getAvailableBiometrics();
+                      final biometrics =
+                          await _localAuth.getAvailableBiometrics();
                       if (biometrics.isEmpty) {
-                        _showSnack('Enroll fingerprint/face to enable biometrics');
+                        _showSnack(
+                            'Enroll fingerprint/face to enable biometrics');
                         return;
                       }
                       final ok = await _localAuth.authenticate(
@@ -216,7 +226,9 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                     }
                     setState(() => _biometricUnlock = v);
                     _save('privacy_biometric', v);
-                    _showSnack(v ? 'Biometric unlock enabled' : 'Biometric unlock disabled');
+                    _showSnack(v
+                        ? 'Biometric unlock enabled'
+                        : 'Biometric unlock disabled');
                   },
                 ),
                 _divider(),
@@ -231,7 +243,9 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                     }
                     setState(() => _requirePasscode = v);
                     _save('privacy_passcode', v);
-                    _showSnack(v ? 'Passcode requirement on' : 'Passcode requirement off');
+                    _showSnack(v
+                        ? 'Passcode requirement on'
+                        : 'Passcode requirement off');
                   },
                 ),
               ]),
@@ -271,7 +285,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   onChanged: (v) {
                     setState(() => _crashReports = v);
                     _save('privacy_crash_reports', v);
-                    _showSnack(v ? 'Crash reports enabled' : 'Crash reports disabled');
+                    _showSnack(
+                        v ? 'Crash reports enabled' : 'Crash reports disabled');
                   },
                 ),
                 _divider(),
@@ -282,7 +297,9 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   onChanged: (v) {
                     setState(() => _marketingEmails = v);
                     _save('privacy_marketing_emails', v);
-                    _showSnack(v ? 'Product emails enabled' : 'Product emails disabled');
+                    _showSnack(v
+                        ? 'Product emails enabled'
+                        : 'Product emails disabled');
                   },
                 ),
               ]),
@@ -313,7 +330,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                      MaterialPageRoute(
+                          builder: (_) => const PrivacyPolicyPage()),
                     );
                   },
                 ),
@@ -324,7 +342,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TermsOfServicePage()),
+                      MaterialPageRoute(
+                          builder: (_) => const TermsOfServicePage()),
                     );
                   },
                 ),
@@ -377,7 +396,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
           Expanded(
             child: Text(
               title,
-              style: AppTextStyles.h3.copyWith(fontSize: 16, color: AppColors.white),
+              style: AppTextStyles.h3
+                  .copyWith(fontSize: 16, color: AppColors.white),
             ),
           ),
           GestureDetector(
@@ -385,7 +405,8 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
             child: Container(
               width: 56,
               height: 32,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+              decoration:
+                  BoxDecoration(borderRadius: BorderRadius.circular(20)),
               child: Stack(
                 children: [
                   Container(
@@ -430,7 +451,9 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Row(
             children: [
-              Icon(icon, color: destructive ? Colors.redAccent : AppColors.grayLight, size: 24),
+              Icon(icon,
+                  color: destructive ? Colors.redAccent : AppColors.grayLight,
+                  size: 24),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(

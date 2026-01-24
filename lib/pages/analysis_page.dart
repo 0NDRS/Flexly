@@ -37,7 +37,14 @@ class _AnalysisPageState extends State<AnalysisPage> {
     _fetchAnalyses();
     _scrollController.addListener(_onScroll);
     _eventSubscription = EventBus().stream.listen((event) {
-      if (event is AnalysisDeletedEvent) {
+      if (event is AnalysisDeletedEvent || event is AnalysisCreatedEvent) {
+        // Reset pagination and reload
+        setState(() {
+          _currentPage = 1;
+          _analyses = [];
+          _hasMore = true;
+          _isLoading = true;
+        });
         _fetchAnalyses();
       }
     });

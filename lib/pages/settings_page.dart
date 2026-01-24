@@ -11,6 +11,8 @@ import 'package:flexly/pages/terms_of_service_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flexly/services/event_bus.dart';
 
+import 'package:flexly/services/user_service.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -20,6 +22,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final _authService = AuthService();
+  final _userService = UserService();
   bool _notificationsEnabled = true;
   String _selectedUnits = 'Metric'; // 'Metric' or 'Imperial'
   Map<String, dynamic>? _userData;
@@ -69,6 +72,69 @@ class _SettingsPageState extends State<SettingsPage> {
         MaterialPageRoute(builder: (context) => const LoginPage()),
         (route) => false,
       );
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.grayDark,
+        title:
+            const Text('Delete Account', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone and will delete all your data, including posts, follows, and comments.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      if (!mounted) return;
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        await _userService.deleteAccount();
+        if (!mounted) return;
+
+        // Dismiss loading
+        Navigator.pop(context);
+
+        // Logout
+        await _authService.logout();
+
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account deleted successfully')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // Dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting account: $e')),
+        );
+      }
     }
   }
 
@@ -228,6 +294,32 @@ class _SettingsPageState extends State<SettingsPage> {
                 PrimaryButton(
                   text: 'Log out',
                   onPressed: _handleLogout,
+                ),
+                const SizedBox(height: 16),
+
+                // Delete Account
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: _handleDeleteAccount,
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      side: BorderSide(
+                        color: AppColors.grayLight.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                      backgroundColor: Colors.transparent,
+                    ),
+                    child: Text(
+                      'Delete Account',
+                      style: AppTextStyles.button2.copyWith(
+                        color: Colors.red.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 32),
               ],

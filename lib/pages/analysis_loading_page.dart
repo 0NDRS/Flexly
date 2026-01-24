@@ -6,6 +6,7 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/services/event_bus.dart';
 
 class AnalysisLoadingPage extends StatefulWidget {
   const AnalysisLoadingPage({super.key});
@@ -79,6 +80,9 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
     try {
       final analysisService = AnalysisService();
       final result = await analysisService.uploadAndAnalyze(_selectedImages);
+
+      // Fire event to update other pages (like Profile)
+      EventBus().fire(AnalysisCreatedEvent(result));
 
       if (mounted) {
         setState(() {
@@ -201,7 +205,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
                 ),
               ] else if (_isCompleted) ...[
                 Icon(Icons.check_circle_outline,
-                  color: AppColors.primary, size: 64),
+                    color: AppColors.primary, size: 64),
                 const SizedBox(height: 24),
                 Text(
                   'Analysis Complete!',

@@ -125,10 +125,12 @@ class NotificationTile extends StatelessWidget {
         },
         child: CircleAvatar(
           backgroundColor: AppColors.grayLight,
-          backgroundImage: notification.sender.profilePicture != null
+          backgroundImage: notification.sender.profilePicture != null &&
+                  notification.sender.profilePicture!.isNotEmpty
               ? NetworkImage(notification.sender.profilePicture!)
               : null,
-          child: notification.sender.profilePicture == null
+          child: notification.sender.profilePicture == null ||
+                  notification.sender.profilePicture!.isEmpty
               ? const Icon(Icons.person, color: Colors.white)
               : null,
         ),

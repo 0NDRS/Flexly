@@ -55,7 +55,8 @@ export const analyzePhysique = async (req: Request, res: Response) => {
     const imageParts = processedFiles.map((f) => f.geminiPart)
     const imageUrls = processedFiles.map((f) => f.cloudinaryUrl)
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+    // Using gemini-2.5-flash as per migration guide from gemini-2.0-flash (Mar 2026 deprecation)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `
       You are an elite bodybuilding and physique coach with a critical eye for detail. 
@@ -259,7 +260,9 @@ export const getAnalysesByUserId = async (req: Request, res: Response) => {
       return
     }
 
-    const analyses = await Analysis.find({ user: userId }).sort({ createdAt: -1 })
+    const analyses = await Analysis.find({ user: userId }).sort({
+      createdAt: -1,
+    })
     res.json(analyses)
   } catch (error) {
     res.status(500).json({ message: (error as Error).message })

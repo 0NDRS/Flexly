@@ -675,7 +675,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.gray,
+                color: AppColors.grayLight,
                 image: user['profilePicture'] != null &&
                         user['profilePicture'].isNotEmpty
                     ? DecorationImage(
@@ -685,8 +685,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
               ),
               child: user['profilePicture'] == null ||
                       user['profilePicture'].isEmpty
-                  ? Icon(Icons.person,
-                    size: 20, color: AppColors.grayLight)
+                  ? const Icon(Icons.person, size: 20, color: Colors.white)
                   : null,
             ),
             const SizedBox(width: 12),

@@ -44,6 +44,34 @@ class UserService {
     }
   }
 
+  Future<List<dynamic>> getFollowers(String userId) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/$userId/followers'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return List<dynamic>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load followers');
+    }
+  }
+
+  Future<List<dynamic>> getFollowing(String userId) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/$userId/following'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return List<dynamic>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load following list');
+    }
+  }
+
   Future<List<dynamic>> searchUsers(String query) async {
     final headers = await _getHeaders();
     final response = await http.get(
@@ -55,6 +83,18 @@ class UserService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to search users');
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/me'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete account');
     }
   }
 }
