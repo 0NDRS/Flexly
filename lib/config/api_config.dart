@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static String get baseUrl {
@@ -9,10 +10,15 @@ class ApiConfig {
       return override;
     }
 
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api';
+    // Use production URL in release mode
+    if (kReleaseMode) {
+      return 'https://flexly-backend.onrender.com/api';
     }
-    // macOS/iOS simulator
+
+    if (Platform.isAndroid) {
+      return 'http://127.0.0.1:3000/api';
+    }
+    // macOS/iOS simulator - when testing: http://127.0.0.1:3000/api
     return 'http://127.0.0.1:3000/api';
   }
 }
