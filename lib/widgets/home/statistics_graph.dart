@@ -15,7 +15,7 @@ class StatisticsGraph extends StatelessWidget {
     final now = DateTime.now();
     final List<Map<String, dynamic>> data = [];
 
-    // Map: "yyyy-MM-dd" -> value
+
     final Map<String, double> analysisMap = {};
     for (var analysis in analyses) {
       if (analysis['createdAt'] != null && analysis['ratings'] != null) {
@@ -30,11 +30,11 @@ class StatisticsGraph extends StatelessWidget {
       }
     }
 
-    // Last 7 days
+
     for (int i = 6; i >= 0; i--) {
       final day = now.subtract(Duration(days: i));
       final dateKey = DateFormat('yyyy-MM-dd').format(day);
-      final dayLabel = DateFormat('E').format(day); // Mon, Tue
+      final dayLabel = DateFormat('E').format(day);
 
       data.add({
         'day': dayLabel,
@@ -76,7 +76,7 @@ class StatisticsGraph extends StatelessWidget {
                   ],
                 ),
                 Positioned(
-                  left: 16, // Adjust for Y-Axis labels width
+                  left: 16,
                   top: 0,
                   bottom: 0,
                   right: 0,
@@ -96,7 +96,7 @@ class StatisticsGraph extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.only(left: 32), // Align with bars
+            padding: const EdgeInsets.only(left: 32),
             child: Row(
               children: data
                   .map((item) => _buildXLabel(item['day'] as String))
@@ -112,7 +112,7 @@ class StatisticsGraph extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 24, // Fixed width for Y-Axis labels
+          width: 24,
           child: Text(
             label,
             style: AppTextStyles.small
@@ -141,9 +141,9 @@ class StatisticsGraph extends StatelessWidget {
   }
 
   Widget _buildBar(String day, double value, bool isSelected) {
-    // Height calculation: Graph height is 180.
-    // We have 5 grid lines.
-    // value 10 -> 100% height.
+
+
+
     return Expanded(
       child: LayoutBuilder(builder: (context, constraints) {
         final height = constraints.maxHeight;

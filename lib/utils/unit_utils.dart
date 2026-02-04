@@ -5,13 +5,11 @@ class UnitUtils {
   static const String metric = 'Metric';
   static const String imperial = 'Imperial';
 
-  /// Returns the saved unit preference or defaults to Metric.
   static Future<String> getPreferredUnits() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_unitKey) ?? metric;
   }
 
-  /// Formats height stored in centimeters into the preferred unit string.
   static String formatHeight(num? heightCm, String units) {
     if (heightCm == null) return '-';
     final heightValue = heightCm.toDouble();
@@ -30,7 +28,6 @@ class UnitUtils {
     return '${heightValue.toStringAsFixed(0)} cm';
   }
 
-  /// Formats weight stored in kilograms into the preferred unit string.
   static String formatWeight(num? weightKg, String units) {
     if (weightKg == null) return '-';
     final weightValue = weightKg.toDouble();

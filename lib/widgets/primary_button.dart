@@ -36,7 +36,7 @@ class PrimaryButton extends StatelessWidget {
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: padding),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Rounded pill shape
+            borderRadius: BorderRadius.circular(30),
           ),
           textStyle: textStyle,
         ),

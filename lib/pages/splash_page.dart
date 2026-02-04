@@ -56,7 +56,7 @@ class _SplashPageState extends State<SplashPage>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              // Header
+
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -114,7 +114,7 @@ class _SplashPageState extends State<SplashPage>
                 ),
               ),
               const SizedBox(height: 48),
-              // Carousel - Scrollable in middle
+
               SizedBox(
                 height: 350,
                 child: Padding(
@@ -135,11 +135,11 @@ class _SplashPageState extends State<SplashPage>
                 ),
               ),
               const Spacer(),
-              // Bottom Section
+
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Page indicators
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -158,7 +158,7 @@ class _SplashPageState extends State<SplashPage>
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Get Started Button
+
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -200,7 +200,7 @@ class _SplashCard2 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icon placeholder with heart shape
+
           Container(
             width: 100,
             height: 100,
@@ -252,7 +252,7 @@ class _SplashCard3 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icon placeholder with flame shape
+
           Container(
             width: 100,
             height: 100,
@@ -304,7 +304,7 @@ class _SplashCard4 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icon placeholder with settings shape
+
           Container(
             width: 100,
             height: 100,

@@ -41,7 +41,7 @@ class NotificationService {
     if (response.statusCode != 200) {
       throw Exception('Failed to mark notifications as read');
     }
-    // We don't really need to return anything here if it succeeds
+
   }
 
   Future<void> registerDeviceToken(String token) async {

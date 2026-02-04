@@ -63,7 +63,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header with logo and text
+
                       Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -112,14 +112,14 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                         ),
                       ),
                       const SizedBox(height: 48),
-                      // Gender Input
+
                       _buildInputField(
                         label: 'Gender',
                         value: selectedGender ?? 'Male',
                         onTap: () => _showGenderPicker(),
                       ),
                       const SizedBox(height: 16),
-                      // Age Input
+
                       _buildTextInputField(
                         label: 'Age',
                         controller: _ageController,
@@ -127,7 +127,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                         focusNode: _ageFocusNode,
                       ),
                       const SizedBox(height: 16),
-                      // Height Input
+
                       _buildTextInputField(
                         label: 'Height',
                         controller: _heightController,
@@ -135,7 +135,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                         focusNode: _heightFocusNode,
                       ),
                       const SizedBox(height: 16),
-                      // Weight Input
+
                       _buildTextInputField(
                         label: 'Weight',
                         controller: _weightController,
@@ -143,7 +143,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                         focusNode: _weightFocusNode,
                       ),
                       const SizedBox(height: 32),
-                      // Continue Button
+
                       SizedBox(
                         width: double.infinity,
                         child: PrimaryButton(
@@ -155,7 +155,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
                     ],
                   ),
                   const SizedBox(height: 48),
-                  // Skip Option at Bottom
+
                   Column(
                     children: [
                       Text(
@@ -397,7 +397,7 @@ class _BodyInfoPageState extends State<BodyInfoPage> {
   }
 
   void _handleSkip() {
-    // Navigate to home without saving body info
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const HomePage()),
     );

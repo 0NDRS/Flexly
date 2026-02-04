@@ -99,7 +99,7 @@ class AuthService {
       int statusCode;
 
       if (profilePicture == null) {
-        // Use JSON request if no file to upload
+
         final response = await http.put(
           Uri.parse('$baseUrl/profile'),
           headers: {
@@ -111,12 +111,12 @@ class AuthService {
         statusCode = response.statusCode;
         responseData = jsonDecode(response.body);
       } else {
-        // Use Multipart request if file exists
+
         final uri = Uri.parse('$baseUrl/profile');
         final request = http.MultipartRequest('PUT', uri)
           ..headers['Authorization'] = 'Bearer $token';
 
-        // Add text fields
+
         updates.forEach((key, value) {
           request.fields[key] = value;
         });

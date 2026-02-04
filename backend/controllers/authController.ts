@@ -103,15 +103,15 @@ export const getMe = async (req: Request, res: Response) => {
       const analyses = await Analysis.find({ user: user._id })
       if (analyses.length > 0) {
         const validAnalyses = analyses.filter(
-          (a: any) => a.ratings?.overall > 0
+          (a: any) => a.ratings?.overall > 0,
         )
         if (validAnalyses.length > 0) {
           const totalOverall = validAnalyses.reduce(
             (sum: number, a: any) => sum + a.ratings.overall,
-            0
+            0,
           )
           user.score = parseFloat(
-            (totalOverall / validAnalyses.length).toFixed(1)
+            (totalOverall / validAnalyses.length).toFixed(1),
           )
         } else {
           user.score = 0
@@ -181,10 +181,9 @@ export const updateProfile = async (req: Request, res: Response) => {
     const user = await User.findById((req as any).user.id)
 
     if (user) {
-      const cooldownMs = 90 * 24 * 60 * 60 * 1000 // 90 days
+      const cooldownMs = 90 * 24 * 60 * 60 * 1000
       const now = new Date()
 
-      // Name change with cooldown
       if (req.body.name && req.body.name !== user.name) {
         if (
           user.nameChangedAt &&
@@ -204,7 +203,6 @@ export const updateProfile = async (req: Request, res: Response) => {
 
       user.email = req.body.email || user.email
 
-      // Username change with cooldown and uniqueness check
       if (req.body.username && req.body.username !== user.username) {
         if (
           user.usernameChangedAt &&
@@ -242,7 +240,8 @@ export const updateProfile = async (req: Request, res: Response) => {
       if (req.body.goal) user.goal = req.body.goal
 
       if (typeof req.body.socialHidden !== 'undefined') {
-        user.socialHidden = req.body.socialHidden === true || req.body.socialHidden === 'true'
+        user.socialHidden =
+          req.body.socialHidden === true || req.body.socialHidden === 'true'
       }
 
       if (req.body.password) {
@@ -260,7 +259,7 @@ export const updateProfile = async (req: Request, res: Response) => {
                 } else {
                   reject(error)
                 }
-              }
+              },
             )
             streamifier.createReadStream(buffer).pipe(stream)
           })

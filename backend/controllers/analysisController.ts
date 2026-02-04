@@ -13,7 +13,7 @@ const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
         if (error) return reject(error)
         if (result) return resolve(result.secure_url)
         reject(new Error('Cloudinary upload failed'))
-      }
+      },
     )
     streamifier.createReadStream(buffer).pipe(uploadStream)
   })
@@ -55,7 +55,6 @@ export const analyzePhysique = async (req: Request, res: Response) => {
     const imageParts = processedFiles.map((f) => f.geminiPart)
     const imageUrls = processedFiles.map((f) => f.cloudinaryUrl)
 
-    // Using gemini-2.5-flash as per migration guide from gemini-2.0-flash (Mar 2026 deprecation)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `
@@ -116,7 +115,7 @@ export const analyzePhysique = async (req: Request, res: Response) => {
         ? parseFloat(
             (
               validRatings.reduce((a, b) => a + b, 0) / validRatings.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0
 
@@ -141,15 +140,15 @@ export const analyzePhysique = async (req: Request, res: Response) => {
       const allAnalyses = await Analysis.find({ user: userId })
 
       const validAnalyses = allAnalyses.filter(
-        (a: any) => a.ratings.overall > 0
+        (a: any) => a.ratings.overall > 0,
       )
       if (validAnalyses.length > 0) {
         const totalOverall = validAnalyses.reduce(
           (sum: number, a: any) => sum + a.ratings.overall,
-          0
+          0,
         )
         userToUpdate.score = parseFloat(
-          (totalOverall / validAnalyses.length).toFixed(1)
+          (totalOverall / validAnalyses.length).toFixed(1),
         )
       } else {
         userToUpdate.score = 0
@@ -328,7 +327,7 @@ export const deleteAnalysis = async (req: Request, res: Response) => {
 
     const remainingAnalyses = await Analysis.find({ user: user._id })
     const validAnalyses = remainingAnalyses.filter(
-      (a: any) => a.ratings?.overall > 0
+      (a: any) => a.ratings?.overall > 0,
     )
 
     let newScore = 0
@@ -352,7 +351,7 @@ export const deleteAnalysis = async (req: Request, res: Response) => {
     if (validAnalyses.length > 0) {
       const total = validAnalyses.reduce(
         (sum: number, a: any) => sum + a.ratings.overall,
-        0
+        0,
       )
       newScore = parseFloat((total / validAnalyses.length).toFixed(1))
 

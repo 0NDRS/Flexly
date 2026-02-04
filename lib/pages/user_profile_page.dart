@@ -37,9 +37,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      // Fetch User Profile
+
       final user = await _userService.getUserProfile(widget.userId);
-      // Fetch User Analyses
+
       final analyses =
           await _analysisService.getAnalysesByUserId(widget.userId);
 
@@ -84,7 +84,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         setState(() {
           _isFollowing = newStatus;
           _isFollowLoading = false;
-          // Update followers count locally for immediate feedback
+
           if (_userData != null) {
             int currentFollowers = _userData!['followers'] ?? 0;
             _userData!['followers'] =
@@ -153,7 +153,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 const SizedBox(height: 16),
 
-                // Profile Card
+
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -162,7 +162,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                   child: Column(
                     children: [
-                      // Profile Image
+
                       Container(
                         width: 120,
                         height: 120,
@@ -189,7 +189,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             : null,
                       ),
                       const SizedBox(height: 16),
-                      // Name
+
                       Text(
                         _userData?['name'] ?? 'User',
                         style: AppTextStyles.h3.copyWith(
@@ -210,7 +210,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Follow Button
+
                       SizedBox(
                         width: 140,
                         height: 40,
@@ -239,7 +239,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ),
 
                       const SizedBox(height: 24),
-                      // Stats row
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -295,7 +295,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Divider(
                           color: AppColors.grayLight.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
-                      // Body Stats
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -318,7 +318,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Streak and Analytics row
+
                 Row(
                   children: [
                     Expanded(
@@ -345,7 +345,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Posts Section
+
                 Text(
                   'Posts',
                   style: AppTextStyles.h2.copyWith(
@@ -354,7 +354,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Posts Grid
+
                 _analyses.isEmpty
                     ? Center(
                         child: Padding(

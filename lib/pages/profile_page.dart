@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         setState(() {
           _userData = user;
-          // _analyses remains empty or error handled
+
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -139,11 +139,11 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
-                // Profile Header
+
                 HomeHeader(userData: _userData),
                 const SizedBox(height: 24),
 
-                // Profile Image Section
+
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -152,7 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Column(
                     children: [
-                      // Large Profile Image with red border
+
                       GestureDetector(
                         onTap: () async {
                           if (_userData == null) return;
@@ -220,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // Nick name
+
                       Text(
                         _userData?['name'] ?? 'Nick name',
                         style: AppTextStyles.h3.copyWith(
@@ -250,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       const SizedBox(height: 24),
-                      // Stats row
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -308,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       Divider(
                           color: AppColors.grayLight.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
-                      // Body Stats
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -331,14 +331,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Streak and Analytics row
+
                 Row(
                   children: [
                     Expanded(
                       child: _buildSmallCard(
                         icon: Icons.local_fire_department,
                         label: 'Streak',
-                        // Calculate streak from analyses (fallback to user data if needed, but calculate is better if user data is stuck at 0)
+
                         value:
                             '${AnalysisService.calculateStreak(_analyses)} days',
                         iconColor: AppColors.fireOrange,
@@ -383,7 +383,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Posts Section
+
                 Text(
                   'Posts',
                   style: AppTextStyles.h2.copyWith(
@@ -392,7 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Posts Grid
+
                 _analyses.isEmpty
                     ? Center(
                         child: Padding(
@@ -516,7 +516,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                 const SizedBox(height: 32),
-                // Edit Profile and Settings buttons
+
                 Row(
                   children: [
                     Expanded(
@@ -557,7 +557,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Logout Button
+
                 OutlinedButton(
                   onPressed: _handleLogout,
                   style: OutlinedButton.styleFrom(

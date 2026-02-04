@@ -63,7 +63,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header with logo and text
+
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -112,7 +112,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  // Goals List - Scrollable with Blur Effect
+
                   Stack(
                     children: [
                       SizedBox(
@@ -125,13 +125,13 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                                         const EdgeInsets.only(bottom: 16.0),
                                     child: _buildGoalOption(goal),
                                   )),
-                              // Extra space to allow scrolling last item above blur
+
                               const SizedBox(height: 60),
                             ],
                           ),
                         ),
                       ),
-                      // Blur overlay at the bottom
+
                       Positioned(
                         bottom: 0,
                         left: 0,
@@ -155,7 +155,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  // Finish Button
+
                   SizedBox(
                     width: double.infinity,
                     child: PrimaryButton(
@@ -165,7 +165,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  // Skip Option at Bottom
+
                   Center(
                     child: Column(
                       children: [
@@ -332,7 +332,7 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
   }
 
   void _handleSkip() {
-    // Navigate to home without saving goal
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const HomePage()),
     );

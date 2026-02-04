@@ -133,7 +133,7 @@ class _HomeContentState extends State<HomeContent> {
 
   void _navigateToTrainingPlan(BuildContext context) {
     if (_latestTrainingPlan == null) {
-      widget.onTabChange(1); // Go to training tab
+      widget.onTabChange(1);
     } else {
       Navigator.push(
         context,

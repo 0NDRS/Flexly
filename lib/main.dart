@@ -12,7 +12,6 @@ enum StartTarget { loading, splash, login, home }
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Use the default dark palette; theme switching has been removed.
   AppColors.setPalette(const AppPalette.dark());
 
   runApp(const MyApp());
@@ -92,7 +91,6 @@ class _AppStartPageState extends State<AppStartPage> {
     final prefs = await SharedPreferences.getInstance();
     final isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
-    // If token exists, try to fetch profile to auto-login
     final token = prefs.getString('token');
     if (token != null) {
       final profile = await _authService.getProfile();

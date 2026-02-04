@@ -36,7 +36,6 @@ export const addCommentToAnalysis = async (req: Request, res: Response) => {
       return
     }
 
-    // If replying, ensure the parent exists and belongs to the same analysis
     let parentComment = null
     if (parentCommentId) {
       parentComment = await Comment.findById(parentCommentId)
@@ -45,7 +44,9 @@ export const addCommentToAnalysis = async (req: Request, res: Response) => {
         return
       }
       if (parentComment.analysis.toString() !== analysisId.toString()) {
-        res.status(400).json({ message: 'Parent comment does not belong to this analysis' })
+        res
+          .status(400)
+          .json({ message: 'Parent comment does not belong to this analysis' })
         return
       }
     }

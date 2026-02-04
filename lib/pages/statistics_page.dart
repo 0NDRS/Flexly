@@ -48,7 +48,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                   HomeHeader(),
                   SizedBox(
                       height:
-                          10), // Reduced space slightly because TabBar has its own padding
+                          10),
                 ],
               ),
             ),
@@ -58,7 +58,7 @@ class _StatisticsPageState extends State<StatisticsPage>
               unselectedLabelColor: AppColors.grayLight,
               indicatorColor: AppColors.primary,
               labelStyle: AppTextStyles.button2,
-              dividerColor: Colors.transparent, // Fixes white line
+              dividerColor: Colors.transparent,
               tabs: const [
                 Tab(text: 'Statistics'),
                 Tab(text: 'Leaderboard'),
@@ -116,7 +116,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
     try {
       final analyses = await _analysisService.getAnalyses();
 
-      // Calculate stats
+
       if (analyses.isNotEmpty) {
         double totalOverall = 0;
         int validOverallCount = 0;
@@ -203,13 +203,13 @@ class _StatisticsTabState extends State<StatisticsTab> {
               style: AppTextStyles.body2.copyWith(color: AppColors.grayLight),
             ),
             const SizedBox(height: 24),
-            // PrimaryButton needs to be imported if you want to use it, or just use elevated button style
+
             ElevatedButton(
               onPressed: () {
-                // Navigate to analysis page (index 2 in main navigation)
-                // Since navigateToTab is not passed here, we might need to handle it differently
-                // or just let user navigate manually.
-                // For now, let's fix the "empty button" issue by making it a proper text
+
+
+
+
               },
               style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -223,17 +223,17 @@ class _StatisticsTabState extends State<StatisticsTab> {
       );
     }
 
-    // Prepare chart spots
+
     final List<FlSpot> spots = [];
-    final reversedAnalyses = _analyses.reversed.toList(); // Oldest first
+    final reversedAnalyses = _analyses.reversed.toList();
     for (int i = 0; i < reversedAnalyses.length; i++) {
       final ratings = reversedAnalyses[i]['ratings'] as Map<String, dynamic>;
       final overall = (ratings['overall'] as num).toDouble();
 
-      // Skip 0 ratings (not analyzed/visible)
+
       if (overall <= 0) continue;
 
-      // Take only last 10 for clarity if too many
+
       if (reversedAnalyses.length > 10 && i < reversedAnalyses.length - 10) {
         continue;
       }
@@ -246,7 +246,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Overview Cards
+
           Row(
             children: [
               Expanded(
@@ -282,7 +282,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
           ),
           const SizedBox(height: 24),
 
-          // Progress Chart
+
           Text('Progress Trend', style: AppTextStyles.h3),
           const SizedBox(height: 16),
           Container(
@@ -333,7 +333,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
           ),
           const SizedBox(height: 24),
 
-          // Muscle Group Performance
+
           Text('Weakest Points', style: AppTextStyles.h3),
           const SizedBox(height: 16),
           ..._buildMuscleBreakdown(),
@@ -382,7 +382,7 @@ class _StatisticsTabState extends State<StatisticsTab> {
 
   List<Widget> _buildMuscleBreakdown() {
     final sortedEntries = _averageMuscleRatings.entries.toList()
-      ..sort((a, b) => a.value.compareTo(b.value)); // Weakest first
+      ..sort((a, b) => a.value.compareTo(b.value));
 
     return sortedEntries.take(5).map((e) {
       final name = e.key[0].toUpperCase() + e.key.substring(1);
@@ -437,9 +437,9 @@ class _StatisticsTabState extends State<StatisticsTab> {
   }
 
   Color _getColorForScore(double score) {
-    if (score >= 8) return const Color(0xFF4CAF50); // Green
+    if (score >= 8) return const Color(0xFF4CAF50);
     if (score >= 5) return Colors.yellow;
-    return AppColors.primary; // Red
+    return AppColors.primary;
   }
 }
 
@@ -457,7 +457,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   List<dynamic> _users = [];
   Map<String, dynamic>? _myRankData;
 
-  // Filters
+
   String _selectedCategory = 'Overall';
   String _selectedGender = 'All';
   String _selectedWeight = 'All';
@@ -506,14 +506,14 @@ class _LeaderboardTabState extends State<LeaderboardTab>
       if (mounted) {
         setState(() {
           _users = data['leaderboard'] ?? [];
-          _myRankData = data['myRank']; // Can be null if not ranked/found
+          _myRankData = data['myRank'];
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        // show error
+
       }
     }
   }
@@ -523,7 +523,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
     super.build(context);
     return Column(
       children: [
-        // Filters
+
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -541,7 +541,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
           ),
         ),
 
-        // List
+
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -565,7 +565,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
                 ),
         ),
 
-        // My Rank Fixed Bottom
+
         if (!_isLoading && _myRankData != null) _buildMyRankTile(),
       ],
     );
@@ -607,17 +607,17 @@ class _LeaderboardTabState extends State<LeaderboardTab>
   }
 
   Widget _buildUserRow(Map<String, dynamic> user, int rank) {
-    // Determine Score Value to display
+
     String scoreDisplay = '';
     if (_selectedCategory == 'Overall') {
       scoreDisplay = '${user['score'] ?? 0.0}';
     } else {
-      // Muscle specific
+
       final muscles = user['muscleStats'] as Map<String, dynamic>?;
       if (muscles != null) {
         final key = _selectedCategory.toLowerCase();
         final rawScore = muscles[key];
-        // Handle varying types (int or double)
+
         if (rawScore is num) {
           scoreDisplay = rawScore.toDouble().toStringAsFixed(1);
         } else {
@@ -662,14 +662,14 @@ class _LeaderboardTabState extends State<LeaderboardTab>
         ),
         child: Row(
           children: [
-            // Rank
+
             SizedBox(
               width: 30,
               child: _buildRankIcon(rank),
             ),
             const SizedBox(width: 12),
 
-            // Avatar
+
             Container(
               width: 40,
               height: 40,
@@ -690,7 +690,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
             ),
             const SizedBox(width: 12),
 
-            // Name & Country (placeholder for country)
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,7 +711,7 @@ class _LeaderboardTabState extends State<LeaderboardTab>
               ),
             ),
 
-            // Score
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(

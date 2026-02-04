@@ -151,7 +151,7 @@ class _HomeHeaderState extends State<HomeHeader> {
                 builder: (context) => const NotificationsPage(),
               ),
             );
-            // Refresh state when coming back
+
             _checkNotifications();
           },
           child: Container(

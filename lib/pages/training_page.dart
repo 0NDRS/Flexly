@@ -68,7 +68,7 @@ class _TrainingPageState extends State<TrainingPage> {
       final newPlan = await _trainingService.generateTrainingPlan();
       await _loadData();
 
-      // Fire event to notify other pages
+
       EventBus().fire(TrainingPlanCreatedEvent(newPlan));
 
       if (mounted) {
@@ -118,11 +118,11 @@ class _TrainingPageState extends State<TrainingPage> {
                         HomeHeader(userData: _userData),
                         const SizedBox(height: 24),
 
-                        // Generate Button Card
+
                         _buildGenerateCard(),
                         const SizedBox(height: 24),
 
-                        // History Section
+
                         Text(
                           'Training History',
                           style: AppTextStyles.h2.copyWith(
@@ -530,7 +530,7 @@ class _TrainingPlanDetailPageState extends State<TrainingPlanDetailPage>
       body: Column(
         children: [
           const SizedBox(height: 16),
-          // Header
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -563,7 +563,7 @@ class _TrainingPlanDetailPageState extends State<TrainingPlanDetailPage>
             ),
           ),
 
-          // Day Tabs
+
           Container(
             height: 44,
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -593,7 +593,7 @@ class _TrainingPlanDetailPageState extends State<TrainingPlanDetailPage>
           ),
           const SizedBox(height: 16),
 
-          // Day Content
+
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -659,7 +659,7 @@ class _TrainingPlanDetailPageState extends State<TrainingPlanDetailPage>
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       children: [
-        // Focus Area
+
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -697,14 +697,14 @@ class _TrainingPlanDetailPageState extends State<TrainingPlanDetailPage>
         ),
         const SizedBox(height: 16),
 
-        // Exercises
+
         ...exercises.asMap().entries.map((entry) {
           final index = entry.key;
           final exercise = entry.value;
           return _buildExerciseCard(exercise, index + 1);
         }),
 
-        // Tips Section (scrollable)
+
         if ((widget.plan['tips'] as List?)?.isNotEmpty == true)
           _buildTipsSection(),
         const SizedBox(height: 32),

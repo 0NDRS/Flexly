@@ -3,12 +3,10 @@ import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/pages/body_info_page.dart';
 import 'package:flexly/pages/home.dart';
-import 'package:flexly/pages/select_plan_page.dart'; // Import SelectPlanPage
+import 'package:flexly/pages/select_plan_page.dart';
 import 'package:flexly/pages/register_page.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
-// Test login page for testing backend authentication
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -99,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
       _isGoogleLoading = true;
     });
 
-    // Ensure old sessions don't auto-pick without consent
+
     try {
       await GoogleSignIn().signOut();
     } catch (_) {}
@@ -147,7 +145,6 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header with logo and text
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -205,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 64),
-                  // Email Input
+
                   TextField(
                     controller: _emailController,
                     style: AppTextStyles.body1.copyWith(color: AppColors.white),
@@ -226,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Password Input
+
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -248,7 +245,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Sign In Button
+
                   SizedBox(
                     height: 56,
                     child: ElevatedButton(
@@ -260,7 +257,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         elevation: 0,
                       ),
-                        child: _isLoading
+                      child: _isLoading
                           ? CircularProgressIndicator(color: AppColors.white)
                           : Text(
                               'Sign in',
@@ -272,7 +269,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Continue with Google Button
+
                   SizedBox(
                     height: 56,
                     child: OutlinedButton(
@@ -307,7 +304,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Sign Up Link
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

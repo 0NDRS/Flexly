@@ -6,8 +6,6 @@ import 'package:flexly/pages/login_page.dart';
 import 'package:flexly/services/auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-// Test register page for testing backend authentication
-
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -136,15 +134,17 @@ class _RegisterPageState extends State<RegisterPage> {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header with logo and text
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -202,7 +202,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  // Username Input
+
                   TextField(
                     controller: _nameController,
                     style: AppTextStyles.body1.copyWith(color: AppColors.white),
@@ -223,7 +223,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Email Input
+
                   TextField(
                     controller: _emailController,
                     style: AppTextStyles.body1.copyWith(color: AppColors.white),
@@ -244,7 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Password Input
+
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Confirm Password Input
+
                   TextField(
                     controller: _confirmPasswordController,
                     obscureText: true,
@@ -288,7 +288,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Sign Up Button
+
                   SizedBox(
                     height: 56,
                     child: ElevatedButton(
@@ -300,7 +300,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         elevation: 0,
                       ),
-                        child: _isLoading
+                      child: _isLoading
                           ? CircularProgressIndicator(color: AppColors.white)
                           : Text(
                               'Sign up',
@@ -312,7 +312,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Continue with Google Button
+
                   SizedBox(
                     height: 56,
                     child: OutlinedButton(
@@ -347,7 +347,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Sign In Link
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -359,7 +359,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       GestureDetector(
                         onTap: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                            MaterialPageRoute(
+                                builder: (context) => const LoginPage()),
                           );
                         },
                         child: Text(

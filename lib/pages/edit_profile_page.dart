@@ -212,7 +212,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (result['success']) {
       if (mounted) {
         EventBus().fire(ProfileUpdatedEvent());
-        Navigator.pop(context, true); // Return true to indicate update
+        Navigator.pop(context, true);
       }
     } else {
       if (mounted) {
@@ -303,7 +303,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               _buildTextField('Email', _emailController,
                   keyboardType: TextInputType.emailAddress),
               const SizedBox(height: 16),
-              // Gender Dropdown
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -342,7 +342,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Stats Row (Age, Height, Weight)
+
               Row(
                 children: [
                   Expanded(

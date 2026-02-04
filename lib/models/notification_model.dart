@@ -1,9 +1,7 @@
-// User model is defined below
-
 class NotificationModel {
   final String id;
   final String recipient;
-  final User sender; // Or just sender ID, but populated is better
+  final User sender;
   final String type;
   final bool read;
   final DateTime createdAt;
@@ -11,7 +9,7 @@ class NotificationModel {
   NotificationModel({
     required this.id,
     required this.recipient,
-    required this.sender, // We'll handle parsing this
+    required this.sender,
     required this.type,
     required this.read,
     required this.createdAt,
@@ -21,7 +19,7 @@ class NotificationModel {
     return NotificationModel(
       id: json['_id'],
       recipient: json['recipient'],
-      sender: User.fromJson(json['sender']), // Assuming sender is populated
+      sender: User.fromJson(json['sender']),
       type: json['type'],
       read: json['read'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),

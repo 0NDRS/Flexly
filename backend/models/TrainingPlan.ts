@@ -8,8 +8,8 @@ const exerciseSchema = new mongoose.Schema({
 })
 
 const dayPlanSchema = new mongoose.Schema({
-  day: { type: String, required: true }, // e.g., "Monday", "Tuesday"
-  focus: { type: String, required: true }, // e.g., "Chest & Triceps", "Rest Day"
+  day: { type: String, required: true },
+  focus: { type: String, required: true },
   exercises: [exerciseSchema],
   isRestDay: { type: Boolean, default: false },
 })

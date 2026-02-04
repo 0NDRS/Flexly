@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
 
     if (requirePasscode || biometricOn) {
-      // If user cancelled or failed, try again when app is next resumed
+
       Future.microtask(_checkAppLock);
     }
   }
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       HomeContent(onTabChange: _onTabChange),
       const TrainingPage(),
       const AnalysisPage(),
-      // Reload StatisticsPage every time it's opened to refresh data
+
       _currentIndex == 3 ? const StatisticsPage() : const SizedBox(),
       ProfilePage(onNavigateToAnalysis: () => _onTabChange(2)),
     ];

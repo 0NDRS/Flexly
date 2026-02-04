@@ -22,7 +22,7 @@ class LeaderboardService {
   }) async {
     final headers = await _getHeaders();
 
-    // Construct Query String
+
     final queryParams = <String, String>{};
     if (category != 'Overall') queryParams['category'] = category;
     if (gender != 'All') queryParams['gender'] = gender;

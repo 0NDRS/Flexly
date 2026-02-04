@@ -28,7 +28,7 @@ class _FeedTabState extends State<FeedTab> {
   bool _isLoading = true;
   String? _currentUserId;
 
-  // Pagination
+
   int _currentPage = 1;
   final int _limit = 10;
   bool _hasMore = true;
@@ -268,7 +268,7 @@ class _FeedTabState extends State<FeedTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -347,7 +347,7 @@ class _FeedTabState extends State<FeedTab> {
                 ],
               ),
             ),
-            // Image
+
             if (firstImage != null)
               Stack(
                 children: [
@@ -380,7 +380,7 @@ class _FeedTabState extends State<FeedTab> {
                   ),
                 ],
               ),
-            // Footer
+
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

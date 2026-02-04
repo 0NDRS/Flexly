@@ -50,7 +50,7 @@ export const markNotificationsRead = async (req: Request, res: Response) => {
 
     await Notification.updateMany(
       { recipient: userId, read: false },
-      { $set: { read: true } }
+      { $set: { read: true } },
     )
 
     res.json({ message: 'Notifications marked as read' })
@@ -59,7 +59,6 @@ export const markNotificationsRead = async (req: Request, res: Response) => {
   }
 }
 
-// Utility: create notification and push in one go
 export const createAndPushNotification = async (params: {
   recipient: any
   sender: any

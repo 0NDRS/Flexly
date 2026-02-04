@@ -260,13 +260,13 @@ class _PrivacySecurityPageState extends State<PrivacySecurityPage> {
                   onChanged: (v) async {
                     setState(() => _analytics = v);
                     _save('privacy_analytics', v);
-                    // When anonymized analytics is ON, hide from social feed (socialHidden = true)
+
                     final auth = AuthService();
                     final resp = await auth.updateProfile({
                       'socialHidden': v ? 'true' : 'false',
                     });
                     if (!(resp['success'] == true)) {
-                      // revert locally on failure
+
                       setState(() => _analytics = !v);
                       _save('privacy_analytics', !v);
                       _showSnack('Could not update privacy setting');

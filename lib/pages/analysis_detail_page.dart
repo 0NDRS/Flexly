@@ -79,7 +79,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         await AnalysisService().deleteAnalysis(widget.analysisId!);
         EventBus().fire(AnalysisDeletedEvent(widget.analysisId!));
         if (mounted) {
-          Navigator.pop(context, true); // Go back with success signal
+          Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {
@@ -140,7 +140,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         text,
         parentCommentId: _replyToCommentId,
       );
-      // If API response lacks parent info, attach from current reply target so we thread correctly
+
       if (_replyToCommentId != null && (comment['parentComment'] == null)) {
         comment['parentComment'] = {'_id': _replyToCommentId};
       }
@@ -233,10 +233,10 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Dynamically prepare stats
+
     final statsEntries = widget.bodyPartRatings.entries.toList();
-    // Sort if needed, or rely on map order.
-    // Split into two columns
+
+
     final mid = (statsEntries.length / 2).ceil();
     final leftStats = statsEntries.take(mid).toList();
     final rightStats = statsEntries.skip(mid).toList();
@@ -251,7 +251,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                // Header
+
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -310,7 +310,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Image Carousel
+
                 Container(
                   height: 300,
                   width: double.infinity,
@@ -375,7 +375,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                         ),
                 ),
                 const SizedBox(height: 24),
-                // Analysis Header
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -401,7 +401,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Stats Grid
+
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -428,7 +428,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                         Container(
                           width: 1,
                           height: (rightStats.length * 40)
-                              .toDouble(), // Approximate height
+                              .toDouble(),
                           color: AppColors.gray,
                         ),
                         const SizedBox(width: 24),
@@ -449,7 +449,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Advice Section
+
                 Text(
                   'Advice:',
                   style: AppTextStyles.h2,
@@ -671,7 +671,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     final replies = _repliesByParent[commentId] ?? [];
     final replyCount = replies.length;
     final expanded = _repliesExpanded[commentId] ?? false;
-    // Only indent first-level replies; deeper replies stay aligned under the first reply
+
     final indent = depth == 1 ? 28.0 : 0.0;
     final parent = comment['parentComment'];
     String? parentUserLabel;

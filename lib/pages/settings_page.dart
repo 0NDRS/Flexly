@@ -24,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _authService = AuthService();
   final _userService = UserService();
   bool _notificationsEnabled = true;
-  String _selectedUnits = 'Metric'; // 'Metric' or 'Imperial'
+  String _selectedUnits = 'Metric';
   Map<String, dynamic>? _userData;
 
   @override
@@ -102,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (confirmed == true) {
       if (!mounted) return;
 
-      // Show loading
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -113,10 +113,10 @@ class _SettingsPageState extends State<SettingsPage> {
         await _userService.deleteAccount();
         if (!mounted) return;
 
-        // Dismiss loading
+
         Navigator.pop(context);
 
-        // Logout
+
         await _authService.logout();
 
         if (!mounted) return;
@@ -130,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       } catch (e) {
         if (!mounted) return;
-        Navigator.pop(context); // Dismiss loading
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error deleting account: $e')),
         );
@@ -165,7 +165,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 const SizedBox(height: 10),
 
-                // Account Section
+
                 Text(
                   'Account',
                   style: AppTextStyles.h2.copyWith(
@@ -223,7 +223,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ]),
                 const SizedBox(height: 32),
 
-                // App preferences Section
+
                 Text(
                   'App preferences',
                   style: AppTextStyles.h2.copyWith(
@@ -253,7 +253,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ]),
                 const SizedBox(height: 32),
 
-                // Support Section
+
                 Text(
                   'Support',
                   style: AppTextStyles.h2.copyWith(
@@ -290,14 +290,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 ]),
                 const SizedBox(height: 32),
 
-                // Logout Button
+
                 PrimaryButton(
                   text: 'Log out',
                   onPressed: _handleLogout,
                 ),
                 const SizedBox(height: 16),
 
-                // Delete Account
+
                 SizedBox(
                   width: double.infinity,
                   height: 56,

@@ -51,12 +51,12 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       const analyses = await Analysis.find({ user: user._id })
       if (analyses.length > 0) {
         const validAnalyses = analyses.filter(
-          (a: any) => a.ratings?.overall > 0
+          (a: any) => a.ratings?.overall > 0,
         )
         if (validAnalyses.length > 0) {
           const total = validAnalyses.reduce(
             (sum: number, a: any) => sum + a.ratings.overall,
-            0
+            0,
           )
           user.score = parseFloat((total / validAnalyses.length).toFixed(1))
         } else {
@@ -115,7 +115,7 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       .sort({ [sortField]: -1 })
       .limit(50)
       .select(
-        'name username profilePicture score muscleStats gender weight country'
+        'name username profilePicture score muscleStats gender weight country',
       )
 
     let myRank = -1
@@ -180,14 +180,11 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get user followers
-// @route   GET /api/users/:id/followers
-// @access  Private
 export const getFollowers = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id).populate(
       'followersList',
-      'name username profilePicture'
+      'name username profilePicture',
     )
     if (!user) {
       res.status(404).json({ message: 'User not found' })
@@ -200,14 +197,11 @@ export const getFollowers = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get user following
-// @route   GET /api/users/:id/following
-// @access  Private
 export const getFollowing = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id).populate(
       'followingList',
-      'name username profilePicture'
+      'name username profilePicture',
     )
     if (!user) {
       res.status(404).json({ message: 'User not found' })
@@ -220,8 +214,6 @@ export const getFollowing = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Follow/Unfollow user
-// @route   POST /api/users/:id/follow
 export const followUser = async (req: Request, res: Response) => {
   try {
     const targetUserId = req.params.id
@@ -252,7 +244,7 @@ export const followUser = async (req: Request, res: Response) => {
       ;(targetUser as any).followersList = (
         targetUser as any
       ).followersList.filter(
-        (id: any) => id.toString() !== currentUserId.toString()
+        (id: any) => id.toString() !== currentUserId.toString(),
       )
       targetUser.followers = (targetUser.followersList as any).length
 
@@ -317,9 +309,6 @@ export const searchUsers = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Delete user account and all data
-// @route   DELETE /api/users/me
-// @access  Private
 export const deleteAccount = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user._id
@@ -330,46 +319,37 @@ export const deleteAccount = async (req: Request, res: Response) => {
       return
     }
 
-    // 1. Find all analyses by this user to get their IDs
     const analyses = await Analysis.find({ user: userId })
     const analysisIds = analyses.map((a) => a._id)
 
-    // 2. Delete all comments by the user
     await Comment.deleteMany({ user: userId })
 
-    // 3. Delete all comments on user's analyses
     if (analysisIds.length > 0) {
       await Comment.deleteMany({ analysis: { $in: analysisIds } })
     }
 
-    // 4. Delete notifications (sent to user or sent by user)
     await Notification.deleteMany({
       $or: [{ recipient: userId }, { sender: userId }],
     })
 
-    // 5. Remove user from others' following/followers lists
-    // Remove user from followingList of people who follow this user
     await User.updateMany(
       { followingList: userId },
       {
         $pull: { followingList: userId },
         $inc: { following: -1 },
-      }
+      },
     )
 
-    // Remove user from followersList of people this user follows
     await User.updateMany(
       { followersList: userId },
       {
         $pull: { followersList: userId },
         $inc: { followers: -1 },
-      }
+      },
     )
 
-    // 6. Delete all analyses
     await Analysis.deleteMany({ user: userId })
 
-    // 7. Delete the user
     await User.findByIdAndDelete(userId)
 
     res.json({ message: 'Account deleted successfully' })

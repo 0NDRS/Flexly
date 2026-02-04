@@ -16,24 +16,13 @@ import { protect } from '../middleware/authMiddleware'
 
 const router = express.Router()
 
-// POST /api/analysis - Upload images and get analysis
 router.post('/', protect, upload.array('images', 5), analyzePhysique)
-
-// GET /api/analysis - Get history
 router.get('/', protect, getAnalyses)
-
-// GET /api/analysis/feed - Get feed
 router.get('/feed', protect, getFeed)
-
-// GET /api/analysis/user/:userId - Get public analyses of a user
 router.get('/user/:userId', protect, getAnalysesByUserId)
-
-// Comments
 router.get('/:id/comments', protect, getCommentsForAnalysis)
 router.post('/:id/comments', protect, addCommentToAnalysis)
 router.delete('/comments/:commentId', protect, deleteComment)
-
-// DELETE /api/analysis/:id - Delete analysis
 router.delete('/:id', protect, deleteAnalysis)
 
 export default router

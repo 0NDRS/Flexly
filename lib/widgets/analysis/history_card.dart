@@ -31,7 +31,7 @@ class HistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -50,7 +50,7 @@ class HistoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Image with tap-to-open overlay
+
           GestureDetector(
             onTap: onDetailsTap,
             behavior: HitTestBehavior.opaque,
@@ -101,7 +101,7 @@ class HistoryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Overall Rating
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -129,7 +129,7 @@ class HistoryCard extends StatelessWidget {
           const SizedBox(height: 16),
           Divider(color: AppColors.gray, height: 1),
           const SizedBox(height: 16),
-          // Stats Grid
+
           Row(
             children: [
               Expanded(

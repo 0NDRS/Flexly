@@ -58,7 +58,7 @@ class AppBottomNavigationBar extends StatelessWidget {
               Positioned(
                 top: 0,
                 child: Container(
-                  width: 40, // Width of the red indicator
+                  width: 40,
                   height: 3,
                   decoration: BoxDecoration(
                     color: AppColors.primary,

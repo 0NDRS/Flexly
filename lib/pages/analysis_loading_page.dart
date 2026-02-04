@@ -81,7 +81,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
       final analysisService = AnalysisService();
       final result = await analysisService.uploadAndAnalyze(_selectedImages);
 
-      // Fire event to update other pages (like Profile)
+
       EventBus().fire(AnalysisCreatedEvent(result));
 
       if (mounted) {
@@ -230,7 +230,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
                   ),
                 ),
               ] else ...[
-                // Scanner UI
+
                 if (_isScanning)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -252,7 +252,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
 
                 const SizedBox(height: 40),
 
-                // Scanner Frame
+
                 Container(
                   width: 300,
                   height: 300,
@@ -264,7 +264,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Show selected images preview if any
+
                       if (_selectedImages.isNotEmpty)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(18),
@@ -297,7 +297,7 @@ class _AnalysisLoadingPageState extends State<AnalysisLoadingPage>
                                 ),
                         ),
 
-                      // Scanning line animation (only when scanning)
+
                       if (_isScanning)
                         AnimatedBuilder(
                           animation: _controller,

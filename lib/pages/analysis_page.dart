@@ -24,7 +24,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   List<dynamic> _analyses = [];
   bool _isLoading = true;
 
-  // Pagination
+
   int _currentPage = 1;
   final int _limit = 10;
   bool _hasMore = true;
@@ -38,7 +38,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     _scrollController.addListener(_onScroll);
     _eventSubscription = EventBus().stream.listen((event) {
       if (event is AnalysisDeletedEvent || event is AnalysisCreatedEvent) {
-        // Reset pagination and reload
+
         setState(() {
           _currentPage = 1;
           _analyses = [];
@@ -67,7 +67,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   Future<void> _fetchAnalyses() async {
-    // Reset pagination
+
     if (mounted) {
       setState(() {
         _currentPage = 1;
@@ -78,8 +78,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
     try {
       final service = AnalysisService();
-      // Fetch stats (all time) separately if possible, or just accept partial stats for now.
-      // Current implementation implies partial stats.
+
+
       final data = await service.getAnalyses(page: 1, limit: _limit);
 
       if (mounted) {
@@ -143,7 +143,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
       context,
       MaterialPageRoute(builder: (context) => const AnalysisLoadingPage()),
     );
-    // Refresh list after returning from upload
+
     _fetchAnalyses();
   }
 
@@ -196,10 +196,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   const SizedBox(height: 16),
                   const HomeHeader(),
                   const SizedBox(height: 24),
-                  // Upload Card - Redesigned to match training page
+
                   _buildUploadCard(context),
                   const SizedBox(height: 24),
-                  // Stats Row
+
                   AnalysisStatsRow(
                     streak: AnalysisService.calculateStreak(_analyses),
                     tracked: _analyses.length,
@@ -215,7 +215,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     },
                   ),
                   const SizedBox(height: 32),
-                  // History Section
+
                   Text(
                     'Analysis History',
                     style: AppTextStyles.h2.copyWith(

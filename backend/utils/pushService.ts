@@ -4,12 +4,11 @@ import User from '../models/User'
 const FCM_ENDPOINT = 'https://fcm.googleapis.com/fcm/send'
 const SERVER_KEY = process.env.FCM_SERVER_KEY
 
-// Sends a push notification via FCM legacy HTTP API to provided device tokens.
 export const sendPushNotification = async (
   deviceTokens: string[],
   title: string,
   body: string,
-  data: Record<string, string> = {}
+  data: Record<string, string> = {},
 ) => {
   if (!SERVER_KEY) {
     console.warn('FCM_SERVER_KEY not set; skipping push send')
@@ -41,13 +40,12 @@ export const sendPushNotification = async (
   }
 }
 
-// Convenience helper to send when a Notification document is created.
 export const sendPushForNotification = async (
-  notification: InstanceType<typeof Notification>
+  notification: InstanceType<typeof Notification>,
 ) => {
   try {
     const recipient = await User.findById(notification.recipient).select(
-      'deviceTokens name'
+      'deviceTokens name',
     )
     if (!recipient) return
     const tokens = recipient.deviceTokens || []

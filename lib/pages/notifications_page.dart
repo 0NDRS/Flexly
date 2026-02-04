@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flexly/models/notification_model.dart';
 import 'package:flexly/services/notification_service.dart';
-import 'package:flexly/pages/user_profile_page.dart'; // To navigate to user profile
+import 'package:flexly/pages/user_profile_page.dart';
 import 'package:flexly/services/event_bus.dart';
 import 'package:flexly/theme/app_colors.dart';
 
@@ -31,7 +31,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           _notifications = notifications;
           _isLoading = false;
         });
-        // Mark as read after loading
+
         _markAsRead();
       }
     } catch (e) {
@@ -50,8 +50,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     try {
       await _notificationService.markRead();
       EventBus().fire(NotificationsReadEvent());
-      // Optionally update local state if needed (e.g. to remove bolding)
-      // but if we are viewing them, they are read.
+
+
     } catch (e) {
       debugPrint('Failed to mark notifications read: $e');
     }
@@ -114,7 +114,7 @@ class NotificationTile extends StatelessWidget {
     return ListTile(
       leading: GestureDetector(
         onTap: () {
-          // Navigate to user profile
+
           Navigator.push(
             context,
             MaterialPageRoute(

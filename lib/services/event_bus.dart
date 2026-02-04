@@ -22,8 +22,6 @@ class EventBus {
   }
 }
 
-// Removed duplicate AnalysisDeletedEvent
-
 class UserFollowEvent {}
 
 class NotificationsReadEvent {}

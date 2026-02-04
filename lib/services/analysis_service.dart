@@ -13,14 +13,14 @@ class AnalysisService {
     try {
       var request = http.MultipartRequest('POST', Uri.parse(baseUrl));
 
-      // Add headers (Auth token)
+
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
 
-      // Add images
+
       for (var image in images) {
         final mimeTypeData =
             lookupMimeType(image.path, headerBytes: [0xFF, 0xD8])?.split('/');

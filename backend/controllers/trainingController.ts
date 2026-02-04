@@ -3,9 +3,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import TrainingPlan from '../models/TrainingPlan'
 import User from '../models/User'
 
-// @desc    Generate a new training plan
-// @route   POST /api/training/generate
-// @access  Private
 export const generateTrainingPlan = async (req: Request, res: Response) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY
@@ -123,9 +120,6 @@ export const generateTrainingPlan = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get all training plans for user
-// @route   GET /api/training
-// @access  Private
 export const getTrainingPlans = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user._id
@@ -151,9 +145,6 @@ export const getTrainingPlans = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Get single training plan
-// @route   GET /api/training/:id
-// @access  Private
 export const getTrainingPlan = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user._id
@@ -173,9 +164,6 @@ export const getTrainingPlan = async (req: Request, res: Response) => {
   }
 }
 
-// @desc    Delete training plan
-// @route   DELETE /api/training/:id
-// @access  Private
 export const deleteTrainingPlan = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user._id
