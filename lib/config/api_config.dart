@@ -16,9 +16,9 @@ class ApiConfig {
     }
 
     if (Platform.isAndroid) {
-      return 'http://127.0.0.1:3000/api';
+      return 'http://10.0.2.2:3000/api';
     }
-    // macOS/iOS simulator - when testing: http://127.0.0.1:3000/api
-    return 'http://127.0.0.1:3000/api';
+    // macOS/iOS - use Mac's local IP for physical devices
+    return 'http://10.2.23.170:3000/api';
   }
 }

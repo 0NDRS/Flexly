@@ -11,13 +11,14 @@ import authRoutes from './routes/authRoutes'
 import analysisRoutes from './routes/analysisRoutes'
 import userRoutes from './routes/userRoutes'
 import notificationRoutes from './routes/notificationRoutes'
+import trainingRoutes from './routes/trainingRoutes'
 
 connectDB()
 
 configureCloudinary()
 
 const app = express()
-const port = process.env.PORT || 3000
+const port = Number(process.env.PORT) || 3000
 
 app.use(cors())
 app.use(express.json())
@@ -29,6 +30,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/analysis', analysisRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/training', trainingRoutes)
 
 app.use((err: any, req: Request, res: Response, next: any) => {
   console.error(err.stack)
@@ -38,6 +40,6 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   })
 })
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`)
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running at http://0.0.0.0:${port}`)
 })

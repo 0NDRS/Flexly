@@ -44,3 +44,8 @@ class UnitsPreferenceChangedEvent {
 }
 
 class ProfileUpdatedEvent {}
+
+class TrainingPlanCreatedEvent {
+  final Map<String, dynamic> plan;
+  TrainingPlanCreatedEvent(this.plan);
+}

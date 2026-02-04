@@ -8,7 +8,9 @@ import 'package:flexly/widgets/home/training_tip_card.dart';
 import 'package:flexly/pages/analysis_detail_page.dart';
 import 'package:flexly/pages/analysis_loading_page.dart';
 import 'package:flexly/pages/streak_page.dart';
+import 'package:flexly/pages/training_page.dart';
 import 'package:flexly/services/analysis_service.dart';
+import 'package:flexly/services/training_service.dart';
 import 'package:flexly/theme/app_colors.dart';
 import 'package:flexly/theme/app_text_styles.dart';
 import 'package:flexly/widgets/home/feed_tab.dart';
@@ -30,16 +32,17 @@ class HomeContent extends StatefulWidget {
 class _HomeContentState extends State<HomeContent> {
   List<dynamic> _analyses = [];
   Map<String, dynamic>? _latestAnalysis;
+  Map<String, dynamic>? _latestTrainingPlan;
   bool _isLoading = true;
   StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
-    _fetchLatestAnalysis();
+    _fetchData();
     _eventSubscription = EventBus().stream.listen((event) {
-      if (event is AnalysisDeletedEvent) {
-        _fetchLatestAnalysis();
+      if (event is AnalysisDeletedEvent || event is TrainingPlanCreatedEvent) {
+        _fetchData();
       }
     });
   }
@@ -50,15 +53,23 @@ class _HomeContentState extends State<HomeContent> {
     super.dispose();
   }
 
-  Future<void> _fetchLatestAnalysis() async {
+  Future<void> _fetchData() async {
     try {
-      final service = AnalysisService();
-      final analyses = await service.getAnalyses();
+      final analysisService = AnalysisService();
+      final trainingService = TrainingService();
+
+      final analyses = await analysisService.getAnalyses();
+      final trainingResult = await trainingService.getTrainingPlans(limit: 1);
+      final trainingPlans = trainingResult['plans'] as List? ?? [];
+
       if (mounted) {
         setState(() {
           _analyses = analyses;
           if (analyses.isNotEmpty) {
             _latestAnalysis = analyses.first;
+          }
+          if (trainingPlans.isNotEmpty) {
+            _latestTrainingPlan = trainingPlans.first;
           }
           _isLoading = false;
         });
@@ -68,8 +79,7 @@ class _HomeContentState extends State<HomeContent> {
         setState(() {
           _isLoading = false;
         });
-        // Silently fail or show a small error indicator if needed
-        debugPrint('Error fetching latest analysis: $e');
+        debugPrint('Error fetching data: $e');
       }
     }
   }
@@ -117,7 +127,21 @@ class _HomeContentState extends State<HomeContent> {
     );
 
     if (result == true) {
-      _fetchLatestAnalysis();
+      _fetchData();
+    }
+  }
+
+  void _navigateToTrainingPlan(BuildContext context) {
+    if (_latestTrainingPlan == null) {
+      widget.onTabChange(1); // Go to training tab
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              TrainingPlanDetailPage(plan: _latestTrainingPlan!),
+        ),
+      );
     }
   }
 
@@ -126,7 +150,7 @@ class _HomeContentState extends State<HomeContent> {
       context,
       MaterialPageRoute(builder: (context) => const AnalysisLoadingPage()),
     );
-    _fetchLatestAnalysis();
+    _fetchData();
   }
 
   @override
@@ -177,7 +201,7 @@ class _HomeContentState extends State<HomeContent> {
 
   Widget _buildDashboard(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _fetchLatestAnalysis,
+      onRefresh: _fetchData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
@@ -261,18 +285,12 @@ class _HomeContentState extends State<HomeContent> {
               SectionHeader(
                 title: 'Training Tips',
                 actionText: 'View All',
-                onActionTap: () => widget.onTabChange(2),
+                onActionTap: () => widget.onTabChange(1),
               ),
               const SizedBox(height: 16),
               TrainingTipCard(
-                latestAnalysis: _latestAnalysis,
-                onTap: () {
-                  if (_latestAnalysis == null) {
-                    _handleUpload(context);
-                  } else {
-                    _navigateToDetails(context);
-                  }
-                },
+                latestTrainingPlan: _latestTrainingPlan,
+                onTap: () => _navigateToTrainingPlan(context),
               ),
               const SizedBox(height: 48),
             ],
